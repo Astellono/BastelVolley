@@ -1,0 +1,1786 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Защита в волейболе</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: тренерский планшет. Площадка занимает левую колонку целиком, справа настройки и разбор. */
+:root {
+  --bg: #e9eff3; --panel: #f8fafb; --fg: #11273a; --muted: #4f6476; --line: #c7d3dc;
+  --accent: #c94a06; --accent-fg: #ffffff; --seg: #dbe4ea;
+  /* Площадка одинакова в обеих темах: это её настоящий цвет */
+  --floor: #0d3a5c; --court: #17557f; --court-line: #f4f8fb; --opp: #124a70; --on-court: #f4f8fb; --ink: #0c2233; --ball: #ff8a2a;
+  --p1: #ffc53d; --p2: #ff8d7d; --p3: #b9ea7f; --p4: #66e3cf; --p5: #cfa8ff; --p6: #ffabd4;
+  --display: "Unbounded", "Golos Text", system-ui, sans-serif;
+  --body: "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1720; --panel: #13232f; --fg: #e8f0f5; --muted: #9fb2c1; --line: #2a3e4d;
+  --accent: #ff8a3c; --accent-fg: #1b0c02; --seg: #1d3140; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #0b1720; --panel: #13232f; --fg: #e8f0f5; --muted: #9fb2c1; --line: #2a3e4d;
+  --accent: #ff8a3c; --accent-fg: #1b0c02; --seg: #1d3140; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.5 var(--body); }
+.page { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 22px 32px; display: grid; gap: 18px 28px; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); grid-template-areas: "head head" "court controls" "court details"; grid-template-rows: auto auto 1fr; }
+header { grid-area: head; }
+h1 { font: 700 clamp(21px, 3.4vw, 30px)/1.15 var(--display); margin: 0 0 6px; text-wrap: balance; letter-spacing: -.01em; }
+header p { margin: 0; color: var(--muted); max-width: 68ch; }
+.court-wrap { grid-area: court; min-width: 0; }
+svg#court { display: block; width: 100%; max-width: min(100%, 86vh); margin: 0 auto; height: auto; border-radius: 6px; user-select: none; -webkit-user-select: none; }
+.controls { grid-area: controls; display: grid; gap: 12px; align-content: start; }
+.details { grid-area: details; display: grid; gap: 18px; align-content: start; min-width: 0; }
+.field-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; background: var(--seg); padding: 3px; border-radius: 8px; }
+.seg button { font: 500 14px/1.2 var(--body); color: var(--fg); background: transparent; border: 0; border-radius: 6px; padding: 9px 6px; cursor: pointer; min-height: 40px; }
+.seg button small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 2px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.seg button[aria-pressed="true"] small { color: var(--accent-fg); }
+.row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; cursor: pointer; min-height: 32px; }
+.check input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.reset { margin-left: auto; font: 500 14px var(--body); color: var(--accent); background: none; border: 1px solid currentColor; border-radius: 6px; padding: 6px 11px; cursor: pointer; }
+.reset[disabled] { color: var(--muted); opacity: .55; cursor: default; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+svg [tabindex] { outline: none; }
+.oppz:focus-visible rect { stroke: var(--ball); stroke-opacity: 1; stroke-width: .08; }
+.tok:focus-visible circle { stroke: var(--ball); stroke-width: .1; }
+h2 { font: 700 15px/1.3 var(--display); margin: 0 0 4px; text-wrap: balance; }
+.sum { margin: 0; color: var(--muted); font-size: 14px; }
+.sec-title { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+.players { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.players li { border-bottom: 1px solid var(--line); }
+.players button { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; width: 100%; text-align: left; background: none; border: 0; color: inherit; font: inherit; padding: 8px 4px; cursor: pointer; align-items: start; }
+.players button:hover, .players button[aria-pressed="true"] { background: var(--seg); }
+.chip { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.pname { font-weight: 600; display: block; line-height: 1.3; font-size: 14px; }
+.pdesc { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; margin-top: 1px; }
+.area { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; padding-top: 1px; }
+.shots { width: 100%; border-collapse: collapse; font-size: 14px; }
+.shots td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.shots tr:first-child td { border-top: 1px solid var(--line); }
+.shots td:last-child { width: 1%; }
+.shots .chip { width: 24px; height: 24px; font-size: 13px; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.court-note { font-size: 13px; color: var(--muted); margin: 8px auto 0; max-width: min(100%, 86vh); }
+svg text { font-family: var(--body); pointer-events: none; }
+svg line, svg marker { pointer-events: none; }
+.oppz { cursor: pointer; }
+.oppz rect { fill: var(--opp); stroke: var(--court-line); stroke-opacity: .35; stroke-width: .03; transition: fill .15s; }
+.oppz:hover rect { fill: #1b6596; }
+.oppz.on rect { fill: var(--ball); fill-opacity: .4; }
+.tok { cursor: grab; touch-action: none; }
+svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.palette { display: flex; flex-wrap: wrap; gap: 6px; }
+.palette button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; background: var(--seg); border: 2px solid transparent; border-radius: 8px; cursor: pointer; }
+.palette button[aria-pressed="true"] { border-color: var(--accent); }
+#edit-box { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+#paint { cursor: crosshair; touch-action: none; }
+.seg.two { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+#board { display: block; width: 100%; max-width: min(100%, 50vh); margin: 0 auto; height: auto; border-radius: 6px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+#board.drawing { touch-action: none; cursor: crosshair; }
+.btok { cursor: grab; touch-action: none; }
+#board-tools { display: grid; gap: 12px; }
+.page:not(.board) #board, .page:not(.board) #board-tools { display: none; }
+.page.board #court, .page.board .details, .page.board .court-note { display: none; }
+.page.board .controls > :not(#view-box):not(#board-tools) { display: none; }
+.page.board .court-bar { max-width: min(100%, 50vh); }
+.page.full #board { width: 100%; height: 100%; max-width: none; border-radius: 0; }
+.page.full.board .court-bar { max-width: none; }
+#b-caption { margin: 8px auto 0; max-width: min(100%, 50vh); padding: 8px 12px; border-radius: 6px; background: var(--floor); color: var(--on-court); font-size: 14px; line-height: 1.35; }
+.page.full #b-caption { position: absolute; left: 12px; right: 12px; bottom: 12px; margin: 0 auto; max-width: 560px; z-index: 1; }
+.page:not(.board) #b-caption { display: none; }
+.swatch { width: 26px; height: 26px; border-radius: 50%; display: block; }
+.court-bar { display: flex; justify-content: flex-end; gap: 8px; margin: 8px auto 0; max-width: min(100%, 86vh); }
+.court-bar .reset { margin-left: 0; background: var(--panel); }
+.page.full { position: fixed; inset: 0; z-index: 20; max-width: none; margin: 0; display: flex; gap: 0; background: var(--floor); padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+.page.full header, .page.full .details, .page.full .court-note { display: none; }
+.page.full .court-wrap { flex: 1; min-width: 0; height: 100%; position: relative; }
+.page.full svg#court { width: 100%; height: 100%; max-width: none; border-radius: 0; }
+.page.full .court-bar { position: absolute; top: 8px; right: 8px; margin: 0; max-width: none; }
+.page.full .controls { flex: none; width: min(340px, 85vw); height: 100%; overflow-y: auto; padding: 14px; background: var(--bg); }
+.page.full.no-side .controls { display: none; }
+@media (max-width: 860px) {
+  .page.full .controls { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: auto; z-index: 2; padding-top: 56px; }
+  .page.full .court-bar { z-index: 3; }
+}
+.tok:active { cursor: grabbing; }
+@media (max-width: 860px) {
+  .page { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "controls" "court" "details"; }
+  svg#court, .court-note { max-width: 100%; }
+}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Защита в волейболе</h1>
+    <p>Зоны ответственности при атаке соперника, страховка при нашей атаке и планшет для своих схем.</p>
+  </header>
+
+  <div class="court-wrap">
+    <svg id="court" viewBox="-0.9 -5.2 10.8 15.1" role="img" aria-label="Схема волейбольной площадки с зонами ответственности защитников"></svg>
+    <svg id="board" viewBox="-0.9 -9.9 10.8 19.8" role="img" aria-label="Тактический планшет: площадка с игроками и рисунками"></svg>
+    <div id="b-caption" aria-live="polite" hidden></div>
+    <div class="court-bar">
+      <button class="reset" id="side-toggle" type="button" hidden>Настройки</button>
+      <button class="reset" id="fs" type="button">На весь экран</button>
+    </div>
+    <p class="court-note">Зону атаки соперника выбирайте нажатием на его половине. Защитников и мяч можно перетаскивать, а блок двигается вдоль сетки: тень и зоны пересчитаются сразу. Цифра на игроке означает его зону на площадке, а не номер на майке. Амплуа указаны для системы 5-1: Связ — связующий, Диаг — диагональный, Доигр — доигровщик, Цб — центральный, Либ — либеро. В защите либеро стоит в зоне 5.</p>
+  </div>
+
+  <section class="controls" aria-label="Настройки">
+    <div id="view-box">
+      <div class="seg" id="view" role="group" aria-label="Раздел"></div>
+    </div>
+    <div id="board-tools">
+      <div>
+        <span class="field-label" id="l-combo">Комбинации</span>
+        <div class="seg two" id="b-combos" role="group" aria-labelledby="l-combo"></div>
+        <div class="row" id="b-play" style="margin-top:8px" hidden>
+          <button class="reset" id="b-pause" type="button" style="margin-left:0">Пауза</button>
+          <button class="reset" id="b-replay" type="button" style="margin-left:0">Повторить</button>
+          <button class="reset" id="b-speed" type="button" style="margin-left:0">Медленнее</button>
+          <button class="reset" id="b-stop" type="button" style="margin-left:0">Закрыть</button>
+        </div>
+      </div>
+      <div><span class="field-label" id="l-bt">Инструмент</span><div class="seg two" id="b-tool" role="group" aria-labelledby="l-bt"></div></div>
+      <div><span class="field-label">Цвет</span><div class="palette" id="b-color"></div></div>
+      <div class="row">
+        <button class="reset" id="b-undo" type="button" style="margin-left:0">Отменить</button>
+        <button class="reset" id="b-clear" type="button" style="margin-left:0">Стереть рисунки</button>
+        <button class="reset" id="b-reset" type="button" style="margin-left:0">Расставить заново</button>
+      </div>
+      <div><span class="field-label" id="l-bblock">Блок</span><div class="seg" id="b-block" role="group" aria-labelledby="l-bblock"></div></div>
+      <label class="check"><input type="checkbox" id="b-shadow" checked> Тень блока</label>
+      <p class="note">Блок стоит по другую сторону сетки от мяча. Инструментом «Двигать» тяните его вдоль сетки, а тень построится от мяча.</p>
+      <label class="check"><input type="checkbox" id="b-opp" checked> Показать соперника</label>
+      <p class="note">Сплошная стрелка удобна для перемещения игрока, пунктирная для передачи или удара. Схема сохраняется автоматически.</p>
+    </div>
+    <div>
+      <span class="field-label" id="l-mode">Ситуация</span>
+      <div class="seg two" id="mode" role="group" aria-labelledby="l-mode"></div>
+    </div>
+    <div id="our-box" hidden>
+      <span class="field-label" id="l-our">Откуда бьёт наш нападающий</span>
+      <div class="seg" id="our" role="group" aria-labelledby="l-our"></div>
+    </div>
+    <div id="setter-box" hidden>
+      <span class="field-label" id="l-setter">Откуда выходит связующий</span>
+      <div class="seg" id="setter" role="group" aria-labelledby="l-setter"></div>
+    </div>
+    <div id="sys-box">
+      <span class="field-label" id="l-sys">Система защиты</span>
+      <div class="seg" id="sys" role="group" aria-labelledby="l-sys"></div>
+    </div>
+    <div id="blk-box">
+      <span class="field-label" id="l-blk">Игроков в блоке</span>
+      <div class="seg" id="blk" role="group" aria-labelledby="l-blk"></div>
+    </div>
+    <div id="partner-box" hidden>
+      <span class="field-label" id="l-partner">Кто помогает центральному</span>
+      <div class="seg" id="partner" role="group" aria-labelledby="l-partner"></div>
+      <p class="note" style="margin-top:5px">На схеме диагональный стоит в зоне 2, а доигровщик в зоне 4. В вашей расстановке может быть иначе.</p>
+    </div>
+    <div class="row">
+      <label class="check"><input type="checkbox" id="t-shots" checked> Направления ударов</label>
+      <label class="check" id="shadow-box"><input type="checkbox" id="t-shadow" checked> Тень блока</label>
+      <button class="reset" id="reset" type="button" disabled>Сбросить</button>
+    </div>
+    <div class="row"><button class="reset" id="edit-toggle" type="button" style="margin-left:0">Изменить зоны</button></div>
+    <div id="edit-box" hidden>
+      <p class="note">Выберите игрока. Кистью закрашивайте площадку, а инструментом «Обвести» нарисуйте контур любой формы: всё внутри него отойдёт игроку. Изменения относятся только к этой схеме.</p>
+      <div><span class="field-label">Чью зону рисуем</span><div class="palette" id="palette"></div></div>
+      <div><span class="field-label" id="l-tool">Инструмент</span><div class="seg" id="tool" role="group" aria-labelledby="l-tool"></div></div>
+      <div id="size-box"><span class="field-label" id="l-size">Размер кисти</span><div class="seg" id="size" role="group" aria-labelledby="l-size"></div></div>
+      <div class="row"><button class="reset" id="undo" type="button" style="margin-left:0" disabled>Отменить</button>
+        <button class="reset" id="zones-reset" type="button" style="margin-left:0">Вернуть автоматические зоны</button></div>
+      <p class="note" id="save-status">Изменения сохраняются только в этом браузере.</p>
+    </div>
+  </section>
+
+  <section class="details" aria-live="polite">
+    <div>
+      <h2 id="title"></h2>
+      <p class="sum" id="sum"></p>
+    </div>
+    <div>
+      <p class="sec-title">Игроки и их зоны</p>
+      <ul class="players" id="players"></ul>
+    </div>
+    <div>
+      <p class="sec-title">Куда идёт мяч и кто его берёт</p>
+      <table class="shots"><tbody id="shots"></tbody></table>
+    </div>
+    <p class="note" id="note"></p>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var SVGNS = "http://www.w3.org/2000/svg";
+  var COURT = 9, BLOCK_W = 0.8, SHADOW_DEPTH = 5;
+  var ALL = [1, 2, 3, 4, 5, 6];
+
+  // Точки удара. Ось x: слева направо, как видят защитники, смотрящие на сетку. Ось y: расстояние от сетки.
+  // Зона 4 соперника находится напротив нашей зоны 2, поэтому она справа.
+  var ATTACKS = {
+    4: { x: 8.1, y: -2.4, side: "right", row: "front", rect: [6, -3], name: "4" },
+    3: { x: 4.5, y: -2.0, side: "center", row: "front", rect: [3, -3], name: "3" },
+    2: { x: 0.9, y: -2.4, side: "left", row: "front", rect: [0, -3], name: "2" },
+    5: { x: 7.5, y: -4.1, side: "right", row: "back", rect: [6, -5], name: "5" },
+    6: { x: 4.5, y: -4.1, side: "center", row: "back", rect: [3, -5], name: "6" },
+    1: { x: 1.5, y: -4.1, side: "left", row: "back", rect: [0, -5], name: "1" }
+  };
+
+  var SYSTEMS = {
+    back: { label: "Углом назад", sub: "6 в глубине",
+      sum: "Игрок зоны 6 забирает всю заднюю линию за спиной у крайних, игроки зон 1 и 5 держат боковые линии перед ним. Эта расстановка хороша против сильных ударов, а её слабое место находится прямо за блоком." },
+    up: { label: "Углом вперёд", sub: "6 под блоком",
+      sum: "Игрок зоны 6 выходит под блок и подбирает скидки. Короткие мячи закрыты, но центр у задней линии остаётся свободным. Эта расстановка подходит против команд, которые часто скидывают." },
+    rot: { label: "Ротация", sub: "смещение к линии",
+      sum: "Защитники смещаются по кругу в сторону удара. Игрок под линией выходит вперёд на скидку, игрок зоны 6 уходит в угол, а игрок дальней стороны занимает центр. Глубокая линия и центр здесь прикрыты слабее всего." }
+  };
+
+  // Базовая схема для удара справа. Для удара слева она отражается: 1↔5, 2↔4, x → 9−x.
+  var WING = {
+    back: { 1: [8.3, 6.0, "Линия", "Удары вдоль линии и скидки на свою сторону"], 6: [5.0, 8.0, "Вся задняя линия", "Забирает всё за спиной у крайних защитников, от угла до угла, и мячи над блоком"], 5: [1.6, 5.9, "Длинная диагональ", "Удар по диагонали в дальний сектор"], 4: [1.5, 3.0, "Короткая диагональ", "Отходит от сетки и берёт резкие удары под углом"] },
+    up: { 6: [6.9, 3.0, "Страховка блока", "Стоит за блоком, берёт скидки и отскоки от рук"], 1: [8.2, 6.8, "Линия и глубина", "Удары вдоль линии и мячи за спину блока"], 5: [1.4, 6.8, "Длинная диагональ", "Удар по диагонали и центр у задней линии"], 4: [1.5, 3.0, "Короткая диагональ", "Отходит от сетки и берёт резкие удары под углом"] },
+    rot: { 1: [8.2, 2.6, "Скидка, короткая линия", "Выходит вперёд под блок со стороны линии"], 6: [7.7, 8.0, "Вся задняя линия", "Смещается к углу за линией, но отвечает за всю заднюю линию"], 5: [3.2, 7.4, "Центр и диагональ", "Смещается в центр у задней линии"], 4: [1.5, 3.2, "Короткая диагональ", "Отходит от сетки и берёт резкие удары под углом"] }
+  };
+  var CENTER = {
+    back: { 1: [7.6, 6.2, "Правый сектор", "Удары в свою сторону от блока"], 6: [4.5, 8.2, "Вся задняя линия", "Забирает всё за спиной у крайних защитников, от угла до угла, и мячи над блоком"], 5: [1.4, 6.2, "Левый сектор", "Удары в свою сторону от блока"] },
+    up: { 6: [4.5, 3.2, "Страховка блока", "Стоит за блоком, берёт скидки и отскоки от рук"], 1: [7.2, 7.6, "Правый сектор и глубина", "Удары вправо и мячи к задней линии"], 5: [1.8, 7.6, "Левый сектор и глубина", "Удары влево и мячи к задней линии"] }
+  };
+  CENTER.rot = CENTER.back;
+  var CENTER_FRONT = { 2: [7.6, 3.0, "Правая короткая", "Отходит от сетки и берёт короткие удары вправо"], 4: [1.4, 3.0, "Левая короткая", "Отходит от сетки и берёт короткие удары влево"] };
+  var MIRROR = { 1: 5, 5: 1, 2: 4, 4: 2, 3: 3, 6: 6 };
+
+  var state = { attack: 4, system: "back", blockers: 2, partner: 2, blockShift: 0, cover: false, ourZone: 4, sandbox: false, free: false, setter: 1, edit: false, brush: null, brushSize: 1, tool: "brush", shots: true, shadow: true, selected: null, moved: false };
+  var cur = { field: {}, roles: {}, block: [], ax: 8.1, ay: -2.4 };
+  var raf = null;
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Переброс без блока: связующий идёт к сетке, остальные пятеро делят площадку.
+  var FREE_POS = {
+    4: [1.5, 3.6], 3: [4.5, 3.4], 2: [7.5, 3.6], 5: [1.6, 7.0], 6: [4.5, 7.6], 1: [7.4, 7.0]
+  };
+  var FREE_SHIFT = {
+    1: { 5: [2.4, 7.2], 6: [6.0, 7.2] }, 5: { 6: [3.0, 7.2], 1: [6.6, 7.2] }, 6: { 5: [2.2, 7.2], 1: [6.8, 7.2] },
+    2: { 3: [5.8, 3.6], 4: [2.5, 3.6] }, 3: { 4: [2.0, 3.6], 2: [7.0, 3.6] }, 4: { 2: [6.5, 3.6], 3: [3.2, 3.6] }
+  };
+  function freeScenario() {
+    var a = ATTACKS[state.attack], field = {}, shift = FREE_SHIFT[state.setter];
+    ALL.forEach(function (p) {
+      if (p === state.setter) return;
+      var v = shift[p] || FREE_POS[p], front = p === 2 || p === 3 || p === 4;
+      field[p] = { x: v[0], y: v[1],
+        name: front ? "Короткие мячи" : "Глубокие мячи",
+        desc: front ? "Отходит от сетки к линии 3 м, принимает короткие и идёт в разбег" : "Принимает мячи в свою часть площадки" };
+    });
+    return { field: field, block: [state.setter], ax: a.x, ay: a.y, side: "free" };
+  }
+
+  // Зоны, изменённые вручную: сетка 180×180 клеток по 5 см, в каждой клетке номер игрока.
+  var GRID = 180, CELL = 0.05, customs = {}, zonesDb = null, undoStack = [];
+  function withPresent(cells) { var pr = {}; for (var i = 0; i < cells.length; i++) pr[cells[i]] = 1; cells.present = pr; return cells; }
+  function encodeGrid(c) {
+    var out = [], run = 1;
+    for (var i = 1; i <= c.length; i++) {
+      if (i < c.length && c[i] === c[i - 1]) run++;
+      else { out.push(c[i - 1] + "*" + run); run = 1; }
+    }
+    return "v2:" + out.join(",");
+  }
+  function decodeGrid(g) {
+    if (typeof g !== "string") return null;
+    var c = new Uint8Array(GRID * GRID), i, j, k;
+    if (g.length === 324 && /^[1-6]+$/.test(g)) { // прежний формат: клетки по 0,5 м
+      for (j = 0; j < GRID; j++) for (i = 0; i < GRID; i++) c[j * GRID + i] = +g[Math.floor(j / 10) * 18 + Math.floor(i / 10)];
+      return withPresent(c);
+    }
+    if (g.slice(0, 3) !== "v2:") return null;
+    var parts = g.slice(3).split(","), pos = 0;
+    for (k = 0; k < parts.length; k++) {
+      var m = /^([1-6])\*(\d+)$/.exec(parts[k]);
+      if (!m || pos + +m[2] > c.length) return null;
+      c.fill(+m[1], pos, pos + +m[2]); pos += +m[2];
+    }
+    return pos === c.length ? withPresent(c) : null;
+  }
+  try {
+    var saved = JSON.parse(localStorage.getItem("vb-zones") || "{}") || {};
+    Object.keys(saved).forEach(function (k) { var c = decodeGrid(saved[k]); if (c) customs[k] = c; });
+  } catch (e) { customs = {}; }
+  // Свободная расстановка: позиции задаёт сам тренер.
+  var SANDBOX_START = { 4: [1.5, 2], 3: [4.5, 2], 2: [7.5, 2], 5: [1.5, 6.5], 6: [4.5, 6.5], 1: [7.5, 6.5] };
+  var sandbox = { pos: JSON.parse(JSON.stringify(SANDBOX_START)), ax: 8.1, ay: -2.4 }, sandboxMoved = false, sandboxDb = null, sandboxTimer = null;
+  function applySandboxData(v) {
+    if (!v || !v.pos || typeof v.ax !== "number" || typeof v.ay !== "number") return false;
+    var pos = {};
+    for (var p = 1; p <= 6; p++) {
+      var q = v.pos[p];
+      if (!Array.isArray(q) || typeof q[0] !== "number" || typeof q[1] !== "number") return false;
+      pos[p] = [Math.max(-.6, Math.min(9.6, q[0])), Math.max(.3, Math.min(9.6, q[1]))];
+    }
+    sandbox = { pos: pos, ax: Math.max(0, Math.min(9, v.ax)), ay: Math.max(-4.5, Math.min(-.8, v.ay)) };
+    sandboxMoved = true;
+    return true;
+  }
+  try { applySandboxData(JSON.parse(localStorage.getItem("vb-sandbox") || "null")); } catch (e) {}
+  function saveSandbox() {
+    clearTimeout(sandboxTimer);
+    sandboxTimer = setTimeout(function () {
+      if (sandboxDb) sandboxDb.set({ pos: sandbox.pos, ax: sandbox.ax, ay: sandbox.ay }).catch(function () {});
+      else { try { localStorage.setItem("vb-sandbox", JSON.stringify(sandbox)); } catch (e) {} }
+    }, 400);
+  }
+  function sandboxScenario() {
+    var field = {}, block = [];
+    ALL.forEach(function (p) {
+      var q = sandbox.pos[p];
+      if (q[1] < 1) block.push(p);
+      else field[p] = { x: q[0], y: q[1], name: "Игрок зоны " + p, desc: "Позиция задана вручную" };
+    });
+    var side = !block.length ? "free" : sandbox.ax < 3 ? "left" : sandbox.ax < 6 ? "center" : "right";
+    return { field: field, block: block, ax: sandbox.ax, ay: sandbox.ay, side: side };
+  }
+  function syncSandbox() {
+    var t = sandboxScenario();
+    cur.field = t.field; cur.block = t.block; cur.side = t.side; cur.ax = t.ax; cur.ay = t.ay;
+  }
+
+  // Наша атака: нападающий бьёт, остальные страхуют его от мяча, отскочившего от блока.
+  var OUR_POS = { 4: [1.0, .4], 3: [4.5, .4], 2: [8.0, .4], 5: [1.5, 3.4], 6: [4.5, 3.4], 1: [7.5, 3.4] };
+  var cover = { ax: 1.0, ay: .4 };
+  function coverSetter() { return state.setter !== state.ourZone ? state.setter : state.ourZone === 5 ? 1 : 5; }
+  function coverTargets() {
+    var ax = cover.ax, ay = cover.ay + .55, deg = Math.PI / 180;
+    var th = Math.atan2(7 - ay, 4.5 - ax);
+    // При ударе с задней линии ближние страхуют со стороны сетки, дальние за спиной нападающего.
+    var back = cover.ay > 2.5, thN = Math.atan2(1 - ay, 4.5 - ax);
+    var plan = back ? [[2, -55, "near", thN], [2, 55, "near", thN], [3.2, -40, "far", th], [3.2, 40, "far", th]]
+      : [[2, -50, "near", th], [2, 50, "near", th], [5, -22, "far", th], [5, 22, "far", th]];
+    return plan.map(function (o) {
+      var a = o[3] + o[1] * deg;
+      return { x: Math.max(.5, Math.min(8.5, ax + o[0] * Math.cos(a))), y: Math.max(.9, Math.min(8.5, ay + o[0] * Math.sin(a))), kind: o[2] };
+    });
+  }
+  function coverScenario() {
+    var z = state.ourZone, st = coverSetter();
+    var ps = ALL.filter(function (p) { return p !== z && p !== st; }), tg = coverTargets(), best = null, bestD = Infinity;
+    (function perm(a, n) {
+      if (n === a.length) {
+        var d = 0;
+        a.forEach(function (p, i) { var h = FREE_POS[p]; d += Math.hypot(h[0] - tg[i].x, h[1] - tg[i].y); });
+        if (d < bestD) { bestD = d; best = a.slice(); }
+        return;
+      }
+      for (var i = n; i < a.length; i++) { var c = a[n]; a[n] = a[i]; a[i] = c; perm(a, n + 1); c = a[n]; a[n] = a[i]; a[i] = c; }
+    })(ps.slice(), 0);
+    var field = {};
+    best.forEach(function (p, i) {
+      var near = tg[i].kind === "near";
+      field[p] = { x: tg[i].x, y: tg[i].y, name: near ? "Ближняя страховка" : "Дальняя страховка",
+        desc: near ? "Стоит рядом с нападающим и подбирает мяч, упавший сразу за блоком" : "Подбирает мячи, далеко отлетевшие от блока" };
+    });
+    return { field: field, block: [z, st], ax: cover.ax, ay: cover.ay, side: "free" };
+  }
+  function coverShots() {
+    var from = Math.max(0, Math.min(COURT, cover.ax)), out = [];
+    coverTargets().forEach(function (t) {
+      var left = t.x < from;
+      out.push({ kind: "free", fx: from, fy: 0, x: t.x, y: t.y,
+        label: t.kind === "near" ? "Короткий" : "Дальний",
+        full: (t.kind === "near" ? "Короткий отскок " : "Дальний отскок ") + (left ? "влево" : "вправо") });
+    });
+    return out;
+  }
+  // Игроки с заданным местом: блокирующие в свободном режиме, нападающий и связующий в нашей атаке.
+  function fixedAt(p) {
+    if (state.sandbox) return sandbox.pos[p];
+    if (state.cover) return p === state.ourZone ? [cover.ax, cover.ay + .55] : [5.8, .42];
+    return null;
+  }
+
+  // Амплуа по расстановке 5-1: от зоны связующего идут центральный, доигровщик, диагональный, центральный, доигровщик.
+  // На задней линии центрального заменяет либеро.
+  var ROLE_FULL = { "Связ": "Связующий", "Цб": "Центральный", "Доигр": "Доигровщик", "Диаг": "Диагональный", "Либ": "Либеро", "Нап": "Нападающий" };
+  function roleFor(p, st) {
+    var stBack = st === 1 || st === 5 || st === 6;
+    if (p === 2 || p === 3 || p === 4) {
+      if (stBack) return { 2: "Диаг", 3: "Цб", 4: "Доигр" }[p];
+      return ["Связ", "Цб", "Доигр", "Диаг", "Цб", "Доигр"][((p - st) % 6 + 6) % 6];
+    }
+    // В защите либеро стоит в зоне 5, доигровщик в зоне 6, связующий или диагональный в зоне 1.
+    if (!stBack) return { 5: "Либ", 6: "Доигр", 1: "Диаг" }[p];
+    if (p === st) return "Связ";
+    return p === (st === 5 ? 6 : 5) ? "Либ" : "Доигр";
+  }
+  function roleOf(p) {
+    var r = roleFor(p, state.cover ? coverSetter() : state.free ? state.setter : 1);
+    return state.cover && p === state.ourZone && r === "Либ" ? "Нап" : r;
+  }
+
+  function zoneKey() {
+    if (state.cover) return "c-" + state.ourZone + "-" + coverSetter();
+    if (state.sandbox) return "sandbox";
+    if (state.free) return "f-" + state.setter + "-" + state.attack;
+    var k = state.attack + "-" + state.system + "-" + state.blockers;
+    return ATTACKS[state.attack].side === "center" && state.blockers === 2 ? k + "-" + state.partner : k;
+  }
+  function curGrid() {
+    var g = customs[zoneKey()];
+    if (!g) return null;
+    var t = scenario().field;
+    for (var p in g.present) if (!t[p]) return null;
+    return g;
+  }
+
+  function scenario() {
+    if (state.cover) return coverScenario();
+    if (state.sandbox) return sandboxScenario();
+    if (state.free) return freeScenario();
+    var a = ATTACKS[state.attack], n = state.blockers, field = {}, block;
+    var deep = a.row === "back" ? 0.5 : 0;
+    function put(p, v) { field[p] = { x: v[0], y: Math.min(8.6, v[1] + deep), name: v[2], desc: v[3] }; }
+    if (a.side === "center") {
+      var base = CENTER[state.system];
+      Object.keys(base).forEach(function (p) { put(+p, base[p]); });
+      block = n === 1 ? [3] : n === 2 ? [3, state.partner] : [4, 3, 2];
+      [2, 4].forEach(function (p) { if (block.indexOf(p) < 0) put(p, CENTER_FRONT[p]); });
+      // Двойной блок смещён в сторону помощника, игрок зоны 6 смещается за ним.
+      if (n === 2) field[6].x += state.partner === 2 ? 0.6 : -0.6;
+    } else {
+      var w = WING[state.system];
+      Object.keys(w).forEach(function (p) { put(+p, w[p]); });
+      block = n === 1 ? [2] : n === 2 ? [2, 3] : [2, 3, 4];
+      if (n === 1) put(3, [4.9, 2.2, "Скидки в центр", "Не успел к блоку, отходит и берёт короткие мячи"]);
+      if (n === 3) { delete field[4]; put(5, [2.0, 5.2, "Вся диагональ", "В тройном блоке один закрывает и короткую, и длинную диагональ"]); }
+      if (a.side === "left") {
+        var mf = {};
+        Object.keys(field).forEach(function (p) { var f = field[p]; mf[MIRROR[p]] = { x: COURT - f.x, y: f.y, name: f.name, desc: f.desc }; });
+        field = mf;
+        block = block.map(function (p) { return MIRROR[p]; });
+      }
+    }
+    return { field: field, block: block, ax: a.x, ay: a.y, side: a.side };
+  }
+
+  // Геометрия блока: внешний блокирующий встаёт напротив мяча, остальные рядом с ним ближе к центру.
+  function blockGeom(side, n, ax) {
+    if (state.sandbox && side !== "free") {
+      var xs = cur.block.length ? cur.block : sandboxScenario().block;
+      var vals = xs.map(function (p) { return sandbox.pos[p][0]; });
+      return { l: Math.max(0, Math.min.apply(null, vals) - BLOCK_W / 2), r: Math.min(COURT, Math.max.apply(null, vals) + BLOCK_W / 2) };
+    }
+    if (side === "free") return { l: 5.4, r: 6.2 };
+    var w = BLOCK_W * n, l, r;
+    if (side === "right") { r = Math.min(COURT, ax - 0.1); l = r - w; }
+    else if (side === "left") { l = Math.max(0, ax + 0.1); r = l + w; }
+    else { l = ax - BLOCK_W / 2 - (n === 3 || (n === 2 && state.partner === 4) ? BLOCK_W : 0); r = l + w; }
+    l += state.blockShift; r += state.blockShift;
+    if (l < 0) { r -= l; l = 0; }
+    if (r > COURT) { l -= r - COURT; r = COURT; }
+    return { l: l, r: r };
+  }
+  function rayX(ax, ay, edge, y) { return ax + (edge - ax) * (y - ay) / (0 - ay); }
+
+  // Обрезка многоугольника полуплоскостью a·x + b·y <= c.
+  function clip(poly, a, b, c) {
+    var out = [];
+    for (var i = 0; i < poly.length; i++) {
+      var p = poly[i], q = poly[(i + 1) % poly.length];
+      var dp = a * p[0] + b * p[1] - c, dq = a * q[0] + b * q[1] - c;
+      if (dp <= 0) out.push(p);
+      if (dp * dq < 0) { var t = dp / (dp - dq); out.push([p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])]); }
+    }
+    return out;
+  }
+  function rect() { return [[0, 0], [COURT, 0], [COURT, COURT], [0, COURT]]; }
+  function cell(p, others) {
+    var poly = rect();
+    others.forEach(function (q) {
+      var dx = q.x - p.x, dy = q.y - p.y;
+      if (dx * dx + dy * dy < 1e-6) return;
+      poly = clip(poly, dx, dy, (q.x * q.x + q.y * q.y - p.x * p.x - p.y * p.y) / 2);
+    });
+    return poly;
+  }
+  function area(poly) {
+    var s = 0;
+    for (var i = 0; i < poly.length; i++) { var a = poly[i], b = poly[(i + 1) % poly.length]; s += a[0] * b[1] - b[0] * a[1]; }
+    return Math.abs(s) / 2;
+  }
+  function ptsStr(poly) { return poly.map(function (p) { return p[0].toFixed(3) + "," + p[1].toFixed(3); }).join(" "); }
+  function nearest(field, x, y) {
+    var g = curGrid();
+    if (g && x >= 0 && x < COURT && y >= 0 && y < COURT) return g[Math.floor(y / CELL) * GRID + Math.floor(x / CELL)];
+    return natural(field, x, y);
+  }
+  function natural(field, x, y) {
+    var Y = backLine(field);
+    if (Y !== null && y >= Y) return 6;
+    var best = null, d = Infinity;
+    Object.keys(field).forEach(function (p) { var f = field[p], k = (f.x - x) * (f.x - x) + (f.y - y) * (f.y - y); if (k < d) { d = k; best = +p; } });
+    return best;
+  }
+
+  // Игрок зоны 6 в глубине забирает полосу вдоль всей задней линии за спиной у остальных.
+  function backLine(field) {
+    var s = field[6], mx = -1, ok = !state.free && !state.sandbox && !state.cover && !!s && s.y >= 6;
+    if (!ok) return null;
+    Object.keys(field).forEach(function (p) { if (+p !== 6) { if (field[p].y >= s.y) ok = false; mx = Math.max(mx, field[p].y); } });
+    return ok ? Math.min(s.y, mx + 0.9) : null;
+  }
+  function zonePolys(field) {
+    var all = Object.keys(field).map(function (p) { return field[p]; }), Y = backLine(field), out = {};
+    Object.keys(field).forEach(function (p) {
+      var poly = cell(field[p], all);
+      if (Y === null) { out[p] = poly; return; }
+      if (+p !== 6) { out[p] = clip(poly, 0, 1, Y); return; }
+      var top = clip(poly, 0, 1, Y), merged = [], a = -1, xa = Infinity, xb = -Infinity;
+      top.forEach(function (q, i) { if (Math.abs(q[1] - Y) < 1e-6) { if (q[0] < xa) { xa = q[0]; a = i; } if (q[0] > xb) xb = q[0]; } });
+      if (top.length >= 3 && a >= 0 && xb > xa) {
+        for (var i = 0; i < top.length; i++) {
+          var q = top[(a + i) % top.length];
+          merged.push(q);
+          if (i > 0 && Math.abs(q[1] - Y) < 1e-6 && q[0] === xb) break;
+        }
+      }
+      out[p] = merged.concat([[COURT, Y], [COURT, COURT], [0, COURT], [0, Y]]);
+    });
+    return out;
+  }
+
+  // Варианты ударов считаются от геометрии: коридоры слева и справа от блока.
+  function shotList(side, ax, ay, b) {
+    if (state.cover) return coverShots();
+    if (side === "free") return [
+      { kind: "free", label: "Короткий", full: "Короткий к сетке", x: 3.0, y: 1.8 },
+      { kind: "free", label: "В центр", full: "В центр площадки", x: 4.5, y: 5.2 },
+      { kind: "free", label: "Левый угол", full: "В левый угол", x: 1.0, y: 8.2 },
+      { kind: "free", label: "Правый угол", full: "В правый угол", x: 8.0, y: 8.2 }
+    ];
+    var out = [];
+    function corridor(edge, sign) {
+      var far = sign < 0 ? 0 : COURT;
+      var isLine = (sign > 0 && side === "right") || (sign < 0 && side === "left");
+      if (isLine) {
+        // Удар в линию идёт вплоть к боковой линии. Его нет, только если на сетке мяч упирается в блок.
+        var lx = far - sign * 0.3, atNet = ax + (lx - ax) * (-ay) / (8.4 - ay);
+        if (atNet <= b.l || atNet >= b.r) {
+          out.push({ kind: "line", label: "В линию", full: "В линию в глубину", x: lx, y: 8.4 });
+          out.push({ kind: "line", noArrow: true, full: "В линию перед защитником", x: lx, y: 6.2 });
+        }
+        return;
+      }
+      var y = 6;
+      var e = Math.max(0, Math.min(COURT, rayX(ax, ay, edge, y)));
+      if ((far - e) * sign > 0.7) {
+        out.push({ kind: isLine ? "line" : "cross", label: isLine ? "Линия" : "Диагональ", full: isLine ? "Вдоль линии" : (side === "center" ? (sign < 0 ? "Диагональ влево" : "Диагональ вправо") : "Длинная диагональ"), x: Math.max(.4, Math.min(8.6, (far + e) / 2)), y: y });
+      }
+      if (!isLine) {
+        var e3 = Math.max(0, Math.min(COURT, rayX(ax, ay, edge, 3)));
+        if ((far - e3) * sign > 1.2) out.push({ kind: "short", label: "Короткая", full: side === "center" ? (sign < 0 ? "Короткий влево" : "Короткий вправо") : "Короткая диагональ", x: Math.max(.5, Math.min(8.5, (far + e3) / 2)), y: 3 });
+      }
+    }
+    corridor(b.l, -1); corridor(b.r, 1);
+    var c = (b.l + b.r) / 2;
+    out.push({ kind: "tip", label: "Скидка", full: "Скидка за блок", x: c, y: 1.8 });
+    out.push({ kind: "over", label: "Над блоком", full: "Над блоком в глубину", x: Math.max(1, Math.min(8, rayX(ax, ay, c, 8.2))), y: 8.2 });
+    return out;
+  }
+
+  // ———— Статичная часть SVG ————
+  var svg = document.getElementById("court");
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(SVGNS, tag);
+    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  var css = "var(--court-line)";
+  var defs = el("defs", {}, svg);
+  var pat = el("pattern", { id: "hatch", width: ".28", height: ".28", patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+  el("rect", { width: ".28", height: ".28", fill: "#0c2233", "fill-opacity": ".10" }, pat);
+  el("rect", { width: ".07", height: ".28", fill: "#0c2233", "fill-opacity": ".55" }, pat);
+  var mk = el("marker", { id: "ah", viewBox: "0 0 10 10", refX: "8", refY: "5", markerWidth: "5", markerHeight: "5", orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M0 0 L10 5 L0 10 z", fill: "#ffffff" }, mk);
+
+  el("rect", { x: -0.9, y: -5.2, width: 10.8, height: 15.1, style: "fill:var(--floor)" }, svg);
+  el("text", { x: 4.5, y: -4.72, "text-anchor": "middle", "font-size": ".28", "font-weight": "600", style: "fill:var(--on-court)", opacity: ".8" }, svg).textContent = "ПОЛОВИНА СОПЕРНИКА";
+
+  var oppButtons = {};
+  [4, 3, 2, 5, 6, 1].forEach(function (z) {
+    var a = ATTACKS[z], front = a.row === "front";
+    var g = el("g", { class: "oppz", role: "button", tabindex: "0", "aria-label": "Удар из зоны " + z + " соперника" }, svg);
+    el("rect", { x: a.rect[0], y: front ? -3 : -4.55, width: 3, height: front ? 3 : 1.55 }, g);
+    var t = el("text", { x: a.rect[0] + 1.5, y: front ? -0.35 : -3.25, "text-anchor": "middle", "font-size": ".34", "font-weight": "600", style: "fill:var(--on-court)" }, g);
+    t.textContent = "Зона " + z;
+    g.addEventListener("click", function () { pickAttack(z); });
+    g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickAttack(z); } });
+    oppButtons[z] = g;
+  });
+
+  el("rect", { x: 0, y: 0, width: 9, height: 9, style: "fill:var(--court)" }, svg);
+  var zonesG = el("g", {}, svg);
+  var zones = {};
+  ALL.forEach(function (p) { zones[p] = el("polygon", { style: "fill:var(--p" + p + ")", stroke: "#ffffff", "stroke-width": ".035", "stroke-dasharray": ".14 .1", "stroke-opacity": ".85" }, zonesG); });
+  var customG = el("g", { "shape-rendering": "crispEdges" }, svg), customPaths = {};
+  ALL.forEach(function (p) { customPaths[p] = el("path", { style: "fill:var(--p" + p + ")" }, customG); });
+  var customSeams = el("path", { fill: "none", stroke: "#ffffff", "stroke-width": ".04", "stroke-opacity": ".85" }, customG);
+  var shadowEl = el("polygon", { fill: "url(#hatch)" }, svg);
+  var shadowLabel = el("text", { "font-size": ".26", "font-weight": "600", "text-anchor": "middle", fill: "#ffffff", stroke: "#0c2233", "stroke-width": ".07", "paint-order": "stroke" }, svg);
+  shadowLabel.textContent = "тень блока";
+
+  // Разметка
+  [[0, 0, 9, 9]].forEach(function (r) { el("rect", { x: r[0], y: r[1], width: r[2], height: r[3], fill: "none", "stroke-width": ".06", style: "stroke:" + css }, svg); });
+  el("line", { x1: 0, x2: 9, y1: 3, y2: 3, "stroke-width": ".05", style: "stroke:" + css }, svg);
+  el("line", { x1: 0, x2: 9, y1: -3, y2: -3, "stroke-width": ".05", style: "stroke:" + css, opacity: ".7" }, svg);
+  el("line", { x1: -.5, x2: 9.5, y1: 0, y2: 0, "stroke-width": ".14", stroke: "#ffffff" }, svg);
+  el("text", { x: -.74, y: 0, "font-size": ".24", transform: "rotate(-90 -.62 0)", "text-anchor": "middle", style: "fill:var(--on-court)" }, svg).textContent = "сетка";
+  el("text", { x: 9.2, y: 3.1, "font-size": ".22", style: "fill:var(--on-court)" }, svg).textContent = "3 м";
+  el("text", { x: 4.5, y: 9.5, "text-anchor": "middle", "font-size": ".28", "font-weight": "600", style: "fill:var(--on-court)", opacity: ".8" }, svg).textContent = "НАША ПОЛОВИНА";
+
+  var shotsG = el("g", {}, svg);
+  var blockG = el("g", {}, svg);
+
+  var tokens = {};
+  ALL.forEach(function (p) {
+    var g = el("g", { class: "tok", tabindex: "0", role: "button" }, svg);
+    el("circle", { r: ".7", fill: "#ffffff", "fill-opacity": "0", "pointer-events": "all" }, g);
+    el("circle", { r: ".36", style: "fill:var(--p" + p + ")", stroke: "#0c2233", "stroke-width": ".04" }, g);
+    var t = el("text", { "text-anchor": "middle", y: ".13", "font-size": ".38", "font-weight": "700", fill: "#0c2233" }, g);
+    t.textContent = p;
+    g._role = el("text", { "text-anchor": "middle", y: ".64", "font-size": ".25", "font-weight": "600", fill: "#ffffff", stroke: "#0c2233", "stroke-width": ".07", "paint-order": "stroke" }, g);
+    tokens[p] = g;
+    bindDrag(g, function (x, y) {
+      if (state.sandbox) {
+        sandbox.pos[p] = [Math.max(-.6, Math.min(9.6, x)), Math.max(.3, Math.min(9.6, y))];
+        sandboxMoved = true; state.moved = true;
+        syncSandbox(); saveSandbox();
+        return;
+      }
+      if (!state.free && cur.block.indexOf(p) >= 0) { moveBlock(p, x); return; }
+      if (!cur.field[p]) return;
+      cur.field[p].x = Math.max(-.6, Math.min(9.6, x));
+      cur.field[p].y = Math.max(.3, Math.min(9.6, y));
+      state.moved = true;
+    }, function () { if (cur.field[p]) select(p); });
+    g.addEventListener("keydown", function (e) {
+      var d = { ArrowLeft: [-.25, 0], ArrowRight: [.25, 0], ArrowUp: [0, -.25], ArrowDown: [0, .25] }[e.key];
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (cur.field[p]) select(p); return; }
+      if (d && state.sandbox) {
+        e.preventDefault();
+        var sq = sandbox.pos[p];
+        sandbox.pos[p] = [Math.max(-.6, Math.min(9.6, sq[0] + d[0])), Math.max(.3, Math.min(9.6, sq[1] + d[1]))];
+        sandboxMoved = true; state.moved = true;
+        syncSandbox(); saveSandbox(); draw(); renderPanel();
+        return;
+      }
+      if (d && !state.free && cur.block.indexOf(p) >= 0) {
+        e.preventDefault();
+        if (d[0]) { moveBlock(p, cur.bx[p] + d[0]); draw(); renderPanel(); }
+        return;
+      }
+      if (!d || !cur.field[p]) return;
+      e.preventDefault();
+      cur.field[p].x = Math.max(-.6, Math.min(9.6, cur.field[p].x + d[0]));
+      cur.field[p].y = Math.max(.3, Math.min(9.6, cur.field[p].y + d[1]));
+      state.moved = true; draw(); renderPanel();
+    });
+  });
+
+  var ballG = el("g", { class: "tok", tabindex: "0", role: "button", "aria-label": "Точка удара соперника, можно передвигать" }, svg);
+  el("circle", { r: ".7", fill: "#ffffff", "fill-opacity": "0", "pointer-events": "all" }, ballG);
+  el("circle", { r: ".34", style: "fill:var(--ball)", stroke: "#ffffff", "stroke-width": ".05" }, ballG);
+  el("path", { d: "M-.3 -.1 Q0 .1 .3 -.1 M-.2 .24 Q0 -.1 .2 .24", fill: "none", stroke: "#ffffff", "stroke-width": ".035" }, ballG);
+  bindDrag(ballG, function (x, y) {
+    if (state.cover) {
+      cover.ax = Math.max(0, Math.min(9, x)); cover.ay = Math.max(.3, Math.min(5, y));
+      cur.ax = cover.ax; cur.ay = cover.ay; state.moved = true;
+      var col = cover.ax < 3 ? 0 : cover.ax < 6 ? 1 : 2, oz = cover.ay > 2.5 ? [5, 6, 1][col] : [4, 3, 2][col];
+      state.ourZone = oz;
+      retarget();
+      return;
+    }
+    cur.ax = Math.max(0, Math.min(9, x));
+    cur.ay = Math.max(-4.5, Math.min(-.8, y));
+    state.moved = true;
+    if (state.sandbox) {
+      sandbox.ax = cur.ax; sandbox.ay = cur.ay; sandboxMoved = true;
+      syncSandbox(); saveSandbox();
+      return;
+    }
+    var z = zoneAt(cur.ax, cur.ay);
+    if (z !== state.attack) { state.attack = z; state.blockShift = 0; }
+    retarget();
+  });
+
+  // На телефоне касание игрока, мяча или холста рисования не должно прокручивать страницу.
+  function lockTouch(e) {
+    if (e.target.closest && e.target.closest(".tok, #paint")) e.preventDefault();
+  }
+  svg.addEventListener("touchstart", lockTouch, { passive: false });
+  svg.addEventListener("touchmove", lockTouch, { passive: false });
+
+  // Закрашивание зон
+  var paintEl = el("rect", { id: "paint", x: 0, y: 0, width: 9, height: 9, fill: "#ffffff", "fill-opacity": "0", style: "display:none" }, svg);
+  var painting = false, lastPaint = null;
+  function toCourt(e) {
+    var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+  function ensureGrid() {
+    var g = curGrid();
+    if (g) return g;
+    var out = new Uint8Array(GRID * GRID);
+    for (var j = 0; j < GRID; j++) for (var i = 0; i < GRID; i++) out[j * GRID + i] = natural(cur.field, (i + .5) * CELL, (j + .5) * CELL);
+    return withPresent(out);
+  }
+  function remember() {
+    var k = zoneKey(), g = customs[k];
+    undoStack.push({ key: k, cells: g ? g.slice() : null });
+    if (undoStack.length > 30) undoStack.shift();
+  }
+  // Круглая кисть
+  function stamp(arr, x, y) {
+    var rad = state.brushSize / 2, rc = rad / CELL;
+    var ci = x / CELL, cj = y / CELL;
+    var j0 = Math.max(0, Math.floor(cj - rc)), j1 = Math.min(GRID - 1, Math.ceil(cj + rc));
+    for (var j = j0; j <= j1; j++) {
+      var dy = j + .5 - cj, w = rc * rc - dy * dy;
+      if (w < 0) continue;
+      w = Math.sqrt(w);
+      var i0 = Math.max(0, Math.ceil(ci - w - .5)), i1 = Math.min(GRID - 1, Math.floor(ci + w - .5));
+      if (i1 >= i0) arr.fill(state.brush, j * GRID + i0, j * GRID + i1 + 1);
+    }
+  }
+  function strokeTo(q) {
+    var arr = ensureGrid(), from = lastPaint || q;
+    var steps = Math.max(1, Math.ceil(Math.hypot(q.x - from.x, q.y - from.y) / .05));
+    for (var s = 0; s <= steps; s++) stamp(arr, from.x + (q.x - from.x) * s / steps, from.y + (q.y - from.y) * s / steps);
+    arr.present[state.brush] = 1;
+    customs[zoneKey()] = arr;
+    lastPaint = { x: q.x, y: q.y };
+    draw(); renderPanel();
+  }
+  // Обводка: всё внутри нарисованного контура отходит выбранному игроку
+  function fillLasso(pts) {
+    var arr = ensureGrid();
+    for (var j = 0; j < GRID; j++) {
+      var y = (j + .5) * CELL, xs = [];
+      for (var k = 0; k < pts.length; k++) {
+        var a = pts[k], b = pts[(k + 1) % pts.length];
+        if ((a.y <= y) !== (b.y <= y)) xs.push(a.x + (y - a.y) * (b.x - a.x) / (b.y - a.y));
+      }
+      xs.sort(function (m, n) { return m - n; });
+      for (var t = 0; t + 1 < xs.length; t += 2) {
+        var i0 = Math.max(0, Math.ceil(xs[t] / CELL - .5)), i1 = Math.min(GRID - 1, Math.floor(xs[t + 1] / CELL - .5));
+        if (i1 >= i0) arr.fill(state.brush, j * GRID + i0, j * GRID + i1 + 1);
+      }
+    }
+    arr.present[state.brush] = 1;
+    customs[zoneKey()] = arr;
+  }
+  function persist(key) {
+    if (zonesDb) {
+      var ref = zonesDb.doc(key), g = customs[key];
+      (g ? ref.set({ grid: encodeGrid(g) }) : ref.delete()).then(function () {
+        setStatus("Изменения сохранены. Их видят все, кому вы откроете эту страницу.");
+      }, function () {
+        setStatus("Не удалось сохранить изменения. Проверьте, что у вас есть право редактировать страницу.");
+      });
+    } else {
+      try { var ser = {}; Object.keys(customs).forEach(function (k) { ser[k] = encodeGrid(customs[k]); }); localStorage.setItem("vb-zones", JSON.stringify(ser)); } catch (e) { setStatus("Браузер не дал сохранить зоны. Они пропадут после закрытия страницы."); }
+    }
+  }
+  function setStatus(t) { document.getElementById("save-status").textContent = t; }
+  var lassoEl = el("polygon", { fill: "#ffffff", "fill-opacity": ".25", stroke: "#ffffff", "stroke-width": ".05", "stroke-dasharray": ".14 .1", style: "pointer-events:none" }, svg);
+  var lassoPts = null;
+  paintEl.addEventListener("pointerdown", function (e) {
+    if (!state.brush) return;
+    cancelAnim();
+    painting = true; lastPaint = null;
+    paintEl.setPointerCapture(e.pointerId);
+    remember();
+    if (state.tool === "lasso") { var q = toCourt(e); lassoPts = [{ x: q.x, y: q.y }]; }
+    else strokeTo(toCourt(e));
+    e.preventDefault();
+  });
+  paintEl.addEventListener("pointermove", function (e) {
+    if (!painting) return;
+    var q = toCourt(e);
+    if (lassoPts) {
+      lassoPts.push({ x: q.x, y: q.y });
+      lassoEl.setAttribute("points", lassoPts.map(function (p) { return p.x.toFixed(2) + "," + p.y.toFixed(2); }).join(" "));
+    } else strokeTo(q);
+  });
+  function endStroke() {
+    if (!painting) return;
+    painting = false;
+    if (lassoPts) {
+      if (lassoPts.length >= 3) fillLasso(lassoPts); else undoStack.pop();
+      lassoPts = null; lassoEl.setAttribute("points", "");
+      draw(); renderPanel();
+    }
+    persist(zoneKey());
+  }
+  paintEl.addEventListener("pointerup", endStroke);
+  paintEl.addEventListener("pointercancel", endStroke);
+
+  function renderEdit(field) {
+    var box = document.getElementById("edit-box");
+    box.hidden = !state.edit;
+    document.getElementById("edit-toggle").textContent = state.edit ? "Готово" : "Изменить зоны";
+    paintEl.style.display = state.edit ? "" : "none";
+    document.getElementById("zones-reset").disabled = !curGrid();
+    document.getElementById("undo").disabled = !undoStack.length;
+    setPressed(document.getElementById("tool"), state.tool);
+    document.getElementById("size-box").hidden = state.tool === "lasso";
+    var keys = Object.keys(field).map(Number).sort();
+    if (keys.indexOf(state.brush) < 0) state.brush = keys[0];
+    var pal = document.getElementById("palette");
+    pal.innerHTML = keys.map(function (p) {
+      return '<button type="button" data-p="' + p + '" aria-label="Зона игрока ' + p + '" aria-pressed="' + (state.brush === p) + '"><span class="chip" style="background:var(--p' + p + ')">' + p + '</span></button>';
+    }).join("");
+    Array.prototype.forEach.call(pal.querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () { state.brush = +b.getAttribute("data-p"); renderEdit(field); });
+    });
+    setPressed(document.getElementById("size"), String(state.brushSize));
+  }
+
+  function bindDrag(g, move, tap) {
+    var active = false, moved = false, sx = 0, sy = 0;
+    g.addEventListener("pointerdown", function (e) {
+      active = true; moved = false; sx = e.clientX; sy = e.clientY;
+      g.setPointerCapture(e.pointerId);
+      cancelAnim();
+      e.preventDefault();
+    });
+    g.addEventListener("pointermove", function (e) {
+      if (!active) return;
+      if (!moved && Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) < 5) return;
+      moved = true;
+      var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      var q = pt.matrixTransform(svg.getScreenCTM().inverse());
+      move(q.x, q.y);
+      draw(); renderPanel();
+    });
+    function end() { if (active && !moved && tap) tap(); active = false; }
+    g.addEventListener("pointerup", end);
+    g.addEventListener("pointercancel", function () { active = false; });
+  }
+
+  // ———— Отрисовка ————
+  function draw() {
+    var field = cur.field, keys = Object.keys(field).map(Number);
+    var others = keys.map(function (p) { return field[p]; });
+    cur.areas = {};
+    var polys = zonePolys(field), grid = curGrid(), ds = {}, seams = "", counts = {};
+    if (grid) {
+      for (var row = 0; row < GRID; row++) {
+        var yy = (row * CELL).toFixed(2), col = 0;
+        while (col < GRID) {
+          var at = row * GRID + col, o = grid[at], st = col;
+          while (col < GRID && grid[row * GRID + col] === o) col++;
+          counts[o] = (counts[o] || 0) + col - st;
+          var wd = ((col - st) * CELL).toFixed(2);
+          ds[o] = (ds[o] || "") + "M" + (st * CELL).toFixed(2) + " " + yy + "h" + wd + "v.05h-" + wd + "z";
+          if (col < GRID) seams += "M" + (col * CELL).toFixed(2) + " " + yy + "v.05";
+        }
+        if (row < GRID - 1) {
+          var cs = 0;
+          while (cs < GRID) {
+            if (grid[row * GRID + cs] !== grid[(row + 1) * GRID + cs]) {
+              var ce = cs;
+              while (ce < GRID && grid[row * GRID + ce] !== grid[(row + 1) * GRID + ce]) ce++;
+              seams += "M" + (cs * CELL).toFixed(2) + " " + ((row + 1) * CELL).toFixed(2) + "h" + ((ce - cs) * CELL).toFixed(2);
+              cs = ce;
+            } else cs++;
+          }
+        }
+      }
+    }
+    customSeams.setAttribute("d", seams);
+    ALL.forEach(function (p) {
+      var z = zones[p], cp = customPaths[p];
+      cp.setAttribute("d", ds[p] || "");
+      if (!field[p]) { z.setAttribute("points", ""); return; }
+      var poly = polys[p];
+      cur.areas[p] = grid ? (counts[p] || 0) * CELL * CELL : area(poly);
+      z.setAttribute("points", grid ? "" : ptsStr(poly));
+      cp.setAttribute("fill-opacity", state.selected == null ? ".5" : state.selected === p ? ".85" : ".16");
+      var sel = state.selected;
+      z.setAttribute("fill-opacity", sel == null ? ".5" : sel === p ? ".85" : ".16");
+    });
+
+    var side = cur.side, n = cur.block.length, ax = cur.ax, ay = cur.ay;
+    var b = blockGeom(side, n, ax);
+    cur.geom = b;
+
+    var sh = [];
+    if (state.shadow && side !== "free") {
+      sh = [[b.l, 0], [b.r, 0], [rayX(ax, ay, b.r, SHADOW_DEPTH), SHADOW_DEPTH], [rayX(ax, ay, b.l, SHADOW_DEPTH), SHADOW_DEPTH]];
+      sh = clip(clip(clip(sh, -1, 0, 0), 1, 0, COURT), 0, -1, 0);
+    }
+    shadowEl.setAttribute("points", sh.length ? ptsStr(sh) : "");
+    if (sh.length) {
+            shadowLabel.setAttribute("x", Math.max(1, Math.min(8, (rayX(ax, ay, b.l, 4.6) + rayX(ax, ay, b.r, 4.6)) / 2)));
+      shadowLabel.setAttribute("y", 4.7);
+      shadowLabel.style.display = "";
+    } else { shadowLabel.style.display = "none"; }
+
+    // Удары
+    while (shotsG.firstChild) shotsG.removeChild(shotsG.firstChild);
+    cur.shots = shotList(side, ax, ay, b);
+    if (state.shots) {
+      cur.shots.forEach(function (s) {
+        if (s.noArrow) return;
+        var dash = s.kind === "tip" || s.kind === "over" || s.kind === "free";
+        el("line", { x1: s.fx != null ? s.fx : ax, y1: s.fy != null ? s.fy : ay, x2: s.x, y2: s.y, stroke: "#ffffff", "stroke-width": ".05", "stroke-dasharray": dash ? ".15 .13" : "none", "marker-end": "url(#ah)", opacity: ".95" }, shotsG);
+        var k = state.cover ? .6 : s.kind === "free" ? .9 : s.kind === "tip" ? .86 : .72;
+        var ox = s.fx != null ? s.fx : ax, oy = s.fy != null ? s.fy : ay;
+        var lxx = ox + (s.x - ox) * k, lyy = oy + (s.y - oy) * k;
+        var right = lxx < 4.5;
+        var t = el("text", { x: lxx + (right ? .16 : -.16), y: lyy + .08, "text-anchor": right ? "start" : "end", "font-size": ".27", "font-weight": "600", fill: "#ffffff", stroke: "#0c2233", "stroke-width": ".08", "paint-order": "stroke" }, shotsG);
+        t.textContent = s.label;
+      });
+    }
+
+    // Блок
+    while (blockG.firstChild) blockG.removeChild(blockG.firstChild);
+    if (side !== "free") el("rect", { x: b.l, y: -.09, width: b.r - b.l, height: .18, rx: ".04", fill: "#0c2233", stroke: "#ffffff", "stroke-width": ".03" }, blockG);
+    if (state.cover) {
+      var bc = Math.max(.8, Math.min(COURT - .8, cover.ax));
+      el("rect", { x: bc - .8, y: -.26, width: 1.6, height: .22, rx: ".04", fill: "#0c2233", stroke: "#ffffff", "stroke-width": ".03" }, blockG);
+      el("text", { x: bc, y: -.38, "text-anchor": "middle", "font-size": ".24", "font-weight": "600", fill: "#ffffff", stroke: "#0c2233", "stroke-width": ".07", "paint-order": "stroke" }, blockG).textContent = "блок соперника";
+    }
+
+    // Блокирующие стоят у сетки по порядку: от края к центру. Иначе порядок слева направо.
+    var order = cur.block.slice();
+    var slots = order.map(function (p, i) {
+      var w = BLOCK_W;
+      var x = side === "right" ? b.r - w * (i + .5) : b.l + w * (i + .5);
+      return { p: p, x: x };
+    });
+    if (side === "center") {
+      // В центре порядок блока идёт слева направо по номерам зон: 4, 3, 2.
+      var sorted = order.slice().sort(function (a, c) { return c - a; });
+      slots = sorted.map(function (p, i) { return { p: p, x: b.l + BLOCK_W * (i + .5) }; });
+    }
+    var bx = {};
+    slots.forEach(function (s) { bx[s.p] = s.x; });
+    cur.bx = bx;
+
+    ALL.forEach(function (p) {
+      var g = tokens[p];
+      var isBlock = cur.block.indexOf(p) >= 0;
+      var x, y;
+      if (isBlock) {
+        var ap = cur.anim && cur.anim[p];
+        var fx = fixedAt(p);
+        x = ap ? ap.x : fx ? fx[0] : bx[p];
+        y = ap ? ap.y : fx ? fx[1] : .42;
+      }
+      else if (field[p]) { x = field[p].x; y = field[p].y; }
+      else { return; }
+      g.setAttribute("transform", "translate(" + x.toFixed(3) + " " + y.toFixed(3) + ")");
+      g._role.textContent = roleOf(p);
+      g.setAttribute("opacity", state.selected != null && state.selected !== p && !isBlock ? ".6" : "1");
+      var fixedTok = isBlock && (state.free || state.cover);
+      g.style.cursor = fixedTok ? "default" : "";
+      g.style.pointerEvents = fixedTok ? "none" : "";
+      g.setAttribute("aria-label", isBlock ? "Игрок зоны " + p + (state.free ? ", связующий" : ", блок, стрелками влево и вправо можно двигать вдоль сетки") : "Игрок зоны " + p + ", стрелками можно передвигать");
+    });
+    ballG.setAttribute("transform", "translate(" + ax.toFixed(3) + " " + ay.toFixed(3) + ")");
+  }
+
+  // Блок двигается целиком вдоль сетки, фишка остаётся под пальцем.
+  function moveBlock(p, x) {
+    var slotOff = cur.bx[p] - (cur.geom.l + cur.geom.r) / 2;
+    state.blockShift = 0;
+    var b0 = blockGeom(cur.side, cur.block.length, cur.ax);
+    state.blockShift = Math.max(-b0.l, Math.min(COURT - b0.r, x - slotOff - (b0.l + b0.r) / 2));
+    state.moved = true;
+    retarget();
+  }
+
+  // Зона соперника, в которой сейчас мяч.
+  function zoneAt(x, y) {
+    var col = x < 3 ? 0 : x < 6 ? 1 : 2;
+    return y < -3 ? [1, 6, 5][col] : [2, 3, 4][col];
+  }
+
+  // Защитники смещаются вслед за коридорами ударов: насколько коридор ушёл от базовой схемы зоны.
+  function adjustField(t) {
+    if (t.side === "free") return t.field;
+    var a = ATTACKS[state.attack], n = t.block.length, keep = state.blockShift;
+    state.blockShift = 0;
+    var r = blockGeom(t.side, n, a.x);
+    state.blockShift = keep;
+    var b = blockGeom(t.side, n, cur.ax);
+    function cl(v) { return Math.max(0, Math.min(COURT, v)); }
+    function lane(key, far, y) {
+      return ((far + cl(rayX(cur.ax, cur.ay, b[key], y))) - (far + cl(rayX(a.x, a.y, r[key], y)))) / 2;
+    }
+    function over(y) {
+      return cl(rayX(cur.ax, cur.ay, (b.l + b.r) / 2, y)) - cl(rayX(a.x, a.y, (r.l + r.r) / 2, y));
+    }
+    var blk = (b.l + b.r - r.l - r.r) / 2, isRight = t.side === "right";
+    var lineKey = isRight ? "r" : "l", lineFar = isRight ? COURT : 0, crossKey = isRight ? "l" : "r", crossFar = isRight ? 0 : COURT;
+    var L = isRight ? 1 : 5, C = isRight ? 5 : 1, O = isRight ? 4 : 2, out = {};
+    var dy = (a.y - cur.ay) * 0.15;
+    Object.keys(t.field).forEach(function (k) {
+      var p = +k, f = t.field[k], dx = 0;
+      if (t.side === "center") {
+        if (p === 1 || p === 2) dx = lane("r", COURT, f.y);
+        else if (p === 5 || p === 4) dx = lane("l", 0, f.y);
+        else dx = f.y >= 6 ? over(f.y) : blk;
+      } else if (p === L) dx = f.y < 4 ? blk : lane(lineKey, lineFar, f.y);
+      else if (p === C) dx = state.system === "rot" ? over(f.y) : lane(crossKey, crossFar, f.y);
+      else if (p === O) dx = lane(crossKey, crossFar, f.y);
+      else if (p === 6) dx = f.y < 4 ? blk : state.system === "rot" ? lane(lineKey, lineFar, f.y) : over(f.y);
+      else dx = blk;
+      out[k] = { x: Math.max(.4, Math.min(8.6, f.x + dx * 0.8)), y: Math.max(.6, Math.min(8.7, f.y + dy)), name: f.name, desc: f.desc };
+    });
+    return out;
+  }
+
+  var followRaf = null, followTo = null;
+  function stopFollow() { if (followRaf) { cancelAnimationFrame(followRaf); followRaf = null; } }
+  function retarget() {
+    if (state.sandbox) { syncSandbox(); return; }
+    if (raf) { cancelAnimationFrame(raf); raf = null; cur.target = null; cur.anim = null; }
+    var t = scenario();
+    cur.side = t.side; cur.block = t.block;
+    followTo = adjustField(t);
+    if (!followRaf) followRaf = requestAnimationFrame(followStep);
+  }
+  function followStep() {
+    followRaf = null;
+    if (!followTo) return;
+    var next = {}, moving = false;
+    Object.keys(followTo).forEach(function (k) {
+      var to = followTo[k], f = cur.field[k], from = f;
+      if (!from) {
+        var m = /translate\(([-\d.]+) ([-\d.]+)\)/.exec(tokens[k].getAttribute("transform") || "");
+        from = m ? { x: +m[1], y: +m[2] } : to;
+      }
+      var nx = reduced ? to.x : from.x + (to.x - from.x) * .25, ny = reduced ? to.y : from.y + (to.y - from.y) * .25;
+      if (Math.abs(nx - to.x) + Math.abs(ny - to.y) < .01) { nx = to.x; ny = to.y; } else moving = true;
+      next[k] = { x: nx, y: ny, name: to.name, desc: to.desc };
+    });
+    cur.field = next;
+    draw();
+    if (moving) followRaf = requestAnimationFrame(followStep);
+    else renderPanel();
+  }
+
+  function cancelAnim() {
+    stopFollow(); if (raf) { cancelAnimationFrame(raf); raf = null; if (cur.target) settle(); } }
+
+  function settle() {
+    var t = cur.target;
+    cur.field = t.field; cur.block = t.block; cur.side = t.side; cur.ax = t.ax; cur.ay = t.ay; cur.anim = null; cur.target = null;
+  }
+
+  // Плавный переход: каждый кадр заново считает зоны по промежуточным позициям.
+  function applyScenario(instant) {
+    var t = scenario();
+    state.moved = state.sandbox && sandboxMoved;
+    state.blockShift = 0;
+    if (state.selected != null && !t.field[state.selected]) state.selected = null;
+    cancelAnim();
+    var prevPos = {};
+    ALL.forEach(function (p) {
+      var m = tokens[p].getAttribute("transform");
+      var r = m && /translate\(([-\d.]+) ([-\d.]+)\)/.exec(m);
+      prevPos[p] = r ? { x: +r[1], y: +r[2] } : null;
+    });
+    cur.side = t.side; cur.block = t.block;
+    var startA = { x: cur.ax, y: cur.ay };
+    if (instant || reduced) {
+      cur.field = clone(t.field); cur.ax = t.ax; cur.ay = t.ay; cur.anim = null;
+      draw(); renderPanel(); return;
+    }
+    var geom = blockGeom(t.side, t.block.length, t.ax), endBlock = {};
+    var ordered = t.side === "center" ? t.block.slice().sort(function (a, c) { return c - a; }) : t.block;
+    ordered.forEach(function (p, i) { endBlock[p] = { x: t.side === "right" ? geom.r - BLOCK_W * (i + .5) : geom.l + BLOCK_W * (i + .5), y: .42 }; });
+    cur.target = { field: clone(t.field), block: t.block, side: t.side, ax: t.ax, ay: t.ay };
+    t.block.forEach(function (p) { var fx = fixedAt(p); if (fx) endBlock[p] = { x: fx[0], y: fx[1] }; });
+    var start = performance.now(), dur = 380;
+    renderPanelFor(t);
+    function frame(now) {
+      var k = Math.min(1, (now - start) / dur);
+      var e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      var f = {};
+      Object.keys(t.field).forEach(function (p) {
+        var to = t.field[p], from = prevPos[p] || to;
+        f[p] = { x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e, name: to.name, desc: to.desc };
+      });
+      cur.field = f;
+      cur.ax = startA.x + (t.ax - startA.x) * e;
+      cur.ay = startA.y + (t.ay - startA.y) * e;
+      cur.anim = {};
+      Object.keys(endBlock).forEach(function (p) {
+        var from = prevPos[p] || endBlock[p];
+        cur.anim[p] = { x: from.x + (endBlock[p].x - from.x) * e, y: from.y + (endBlock[p].y - from.y) * e };
+      });
+      draw();
+      if (k < 1) { raf = requestAnimationFrame(frame); }
+      else { raf = null; settle(); draw(); renderPanel(); }
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  // ———— Панель ————
+  var $ = function (id) { return document.getElementById(id); };
+  function renderPanelFor(t) { cur.side = t.side; cur.block = t.block; renderPanel(t); }
+
+  function renderPanel(target) {
+    var a = ATTACKS[state.attack];
+    var side = target ? target.side : cur.side;
+    var field = target ? target.field : cur.field;
+    var block = target ? target.block : cur.block;
+    var ax = target ? target.ax : cur.ax, ay = target ? target.ay : cur.ay;
+    var opposite = { 4: "нашей зоны 2", 3: "нашей зоны 3", 2: "нашей зоны 4", 5: "нашей зоны 1", 6: "нашей зоны 6", 1: "нашей зоны 5" }[state.attack];
+
+    $("title").textContent = "Удар из зоны " + state.attack + " соперника" + (a.row === "back" ? ", задняя линия" : "");
+    $("sum").textContent = "Эта зона находится напротив " + opposite + ". " + SYSTEMS[state.system].sum;
+
+    var others = Object.keys(field).map(function (p) { return field[p]; });
+    var polys = zonePolys(field), pg = curGrid();
+    function zoneArea(p, ps) { if (!pg) return area(ps[p]); var n = 0; for (var i = 0; i < pg.length; i++) if (pg[i] === p) n++; return n * CELL * CELL; }
+    var html = "";
+    ALL.forEach(function (p) {
+      var isBlock = block.indexOf(p) >= 0, f = field[p];
+      if (!isBlock && !f) return;
+      var ar = !isBlock ? Math.round(zoneArea(p, polys)) + " м²" : "";
+      var dbl = !state.sandbox && side === "center" && block.length === 2;
+      var nm = !isBlock ? f.name : state.cover ? (p === state.ourZone ? "Нападающий" : "Связующий") : state.free ? "Связующий" : dbl ? "Блок: " + (p === 3 ? "центральный" : p === 2 ? "диагональный" : "доигровщик") : "Блок";
+      var ds = !isBlock ? f.desc : state.cover ? (p === state.ourZone ? "Бьёт по сопернику, после удара готов подобрать мяч сам" : "Отдал передачу и страхует у сетки") : state.free ? "Выходит к сетке под вторую передачу и мяч не принимает" : "Руки над сеткой закрывают часть площадки";
+      html += '<li><button type="button" data-p="' + p + '" aria-pressed="' + (state.selected === p) + '"' + (isBlock ? " disabled" : "") + '>' +
+        '<span class="chip" style="background:var(--p' + p + ')">' + p + '</span>' +
+        '<span><span class="pname">' + nm + (isBlock && (dbl || state.free || state.cover) ? "" : " · " + ROLE_FULL[roleOf(p)].toLowerCase()) + '</span><span class="pdesc">' + ds + '</span></span>' +
+        '<span class="area">' + ar + '</span></button></li>';
+    });
+    $("players").innerHTML = html;
+    Array.prototype.forEach.call($("players").querySelectorAll("button"), function (b) {
+      if (!b.disabled) b.addEventListener("click", function () { select(+b.getAttribute("data-p")); });
+    });
+
+    var geom = blockGeom(side, block.length, ax);
+    var rows = "";
+    shotList(side, ax, ay, geom).forEach(function (s) {
+      var p = nearest(field, s.x, s.y);
+      rows += '<tr><td>' + s.full + '</td><td><span class="chip" style="background:var(--p' + p + ')" aria-label="Игрок зоны ' + p + '">' + p + '</span></td></tr>';
+    });
+    $("shots").innerHTML = rows;
+
+    var note = "Зона игрока показывает часть площадки, до которой ему ближе, чем остальным защитникам. Границы показывают стыки, где двум игрокам нужно договариваться заранее. Глубина тени условная: 5 м от сетки.";
+    if (a.row === "back") note = "При ударе с задней линии у защиты больше времени, поэтому все стоят на полметра глубже. " + note;
+    if (state.system === "rot" && a.side === "center") note = "Против удара из центра ротация обычно не строится: смещаться некуда. Показана базовая расстановка. " + note;
+    if (backLine(field) !== null) note = "Исключение: полосу вдоль задней линии за спиной у крайних защитников забирает игрок зоны 6. " + note;
+    if (state.free) {
+      $("title").textContent = "Переброс двумя руками из зоны " + state.attack;
+      $("sum").textContent = "Блока нет. Игроки передней линии отходят к линии 3 м, чтобы принять мяч и успеть в разбег. Связующий выходит к сетке, остальные делят площадку поровну и принимают сверху.";
+      note = "Зона игрока показывает часть площадки, до которой ему ближе, чем остальным. Связующего в расчёт не берём, потому что он не принимает. Правило про заднюю линию для игрока зоны 6 здесь не действует.";
+    }
+    if (state.cover) {
+      $("title").textContent = "Наша атака из зоны " + state.ourZone;
+      $("sum").textContent = "Нападающий бьёт, а команда страхует его на случай, если мяч отскочит от блока соперника. Двое стоят близко и подбирают мяч сразу за блоком, двое стоят дальше и берут мячи, отлетевшие в глубину.";
+      note = "Схема страховки условная: два игрока рядом примерно в 2 м, два дальше примерно в 5 м. Зоны показывают, кому ближе добежать. Перетащите мяч, и нападающий со страховкой сместятся.";
+    }
+    if (state.sandbox) {
+      $("title").textContent = "Свободная расстановка";
+      $("sum").textContent = "Перетаскивайте всех шестерых игроков и мяч куда угодно, сами они не двигаются. Игрок ближе 1 м к сетке считается блокирующим: он даёт тень и не получает своей зоны.";
+      note = "Зона игрока показывает часть площадки, до которой ему ближе, чем остальным. Расстановка сохраняется автоматически.";
+    }
+    if (pg) note = "Зоны на этой схеме изменены вручную. Они не меняются, когда вы перетаскиваете игроков, но таблица ударов считается уже по ним.";
+    $("note").textContent = note;
+    renderEdit(field);
+
+    $("reset").disabled = !state.moved;
+    Object.keys(oppButtons).forEach(function (z) {
+      oppButtons[z].setAttribute("class", "oppz" + (!state.cover && +z === state.attack ? " on" : ""));
+      oppButtons[z].style.opacity = state.cover ? ".35" : "";
+      oppButtons[z].style.pointerEvents = state.cover ? "none" : "";
+      oppButtons[z].setAttribute("aria-pressed", String(!state.cover && +z === state.attack));
+    });
+    setPressed($("sys"), state.system);
+    setPressed($("blk"), String(state.blockers));
+    setPressed($("partner"), String(state.partner));
+    setPressed($("mode"), state.cover ? "cover" : state.sandbox ? "sandbox" : state.free ? "free" : "attack");
+    setPressed($("our"), String(state.ourZone));
+    $("our-box").hidden = !state.cover;
+    setPressed($("setter"), String(state.cover ? coverSetter() : state.setter));
+    $("setter-box").hidden = !(state.free || state.cover);
+    $("sys-box").hidden = state.free || state.sandbox || state.cover;
+    $("blk-box").hidden = state.free || state.sandbox || state.cover;
+    $("shadow-box").hidden = state.free || state.cover;
+    $("partner-box").hidden = state.sandbox || !(side === "center" && block.length === 2);
+  }
+  function setPressed(root, val) {
+    Array.prototype.forEach.call(root.querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-v") === val)); });
+  }
+
+  function select(p) { state.selected = state.selected === p ? null : p; draw(); renderPanel(); }
+  function pickAttack(z) {
+    if (state.cover) return;
+    if (state.sandbox) {
+      state.attack = z; sandbox.ax = ATTACKS[z].x; sandbox.ay = ATTACKS[z].y; sandboxMoved = true;
+      saveSandbox(); applyScenario(false);
+      return;
+    }
+    state.attack = z; state.blockers = z === 3 ? 1 : 2; applyScenario(false); }
+
+  Object.keys(SYSTEMS).forEach(function (k) {
+    var s = SYSTEMS[k], b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", k);
+    b.innerHTML = s.label + "<small>" + s.sub + "</small>";
+    b.addEventListener("click", function () { state.system = k; applyScenario(false); });
+    $("sys").appendChild(b);
+  });
+  [1, 2, 3].forEach(function (n) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", String(n)); b.textContent = n;
+    b.addEventListener("click", function () { state.blockers = n; applyScenario(false); });
+    $("blk").appendChild(b);
+  });
+  [[2, "Диагональный", "зона 2, блок правее"], [4, "Доигровщик", "зона 4, блок левее"]].forEach(function (o) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", String(o[0]));
+    b.innerHTML = o[1] + "<small>" + o[2] + "</small>";
+    b.addEventListener("click", function () { state.partner = o[0]; applyScenario(false); });
+    $("partner").appendChild(b);
+  });
+  [["attack", "Атака соперника", "зоны защиты"], ["free", "Переброс соперника", "двумя руками, без блока"], ["cover", "Наша атака", "страховка нападающего"], ["sandbox", "Свободно", "расставляю сам"]].forEach(function (o) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", o[0]);
+    b.innerHTML = o[1] + "<small>" + o[2] + "</small>";
+    b.addEventListener("click", function () { state.free = o[0] === "free"; state.sandbox = o[0] === "sandbox"; state.cover = o[0] === "cover"; applyScenario(false); });
+    $("mode").appendChild(b);
+  });
+  ALL.forEach(function (n) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", String(n)); b.textContent = "Зона " + n;
+    b.style.fontSize = "13px";
+    b.addEventListener("click", function () { state.setter = n; applyScenario(false); });
+    $("setter").appendChild(b);
+  });
+  $("t-shots").addEventListener("change", function (e) { state.shots = e.target.checked; draw(); });
+  $("t-shadow").addEventListener("change", function (e) { state.shadow = e.target.checked; draw(); });
+  $("reset").addEventListener("click", function () {
+    if (state.cover) { var oh = OUR_POS[state.ourZone]; cover.ax = oh[0]; cover.ay = oh[1]; }
+    if (state.sandbox) {
+      sandbox = { pos: JSON.parse(JSON.stringify(SANDBOX_START)), ax: 8.1, ay: -2.4 };
+      sandboxMoved = false; saveSandbox();
+    }
+    applyScenario(false);
+  });
+
+  [[0.5, "0,5 м"], [1, "1 м"], [2, "2 м"]].forEach(function (o) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", String(o[0])); b.textContent = o[1];
+    b.addEventListener("click", function () { state.brushSize = o[0]; setPressed($("size"), String(o[0])); });
+    $("size").appendChild(b);
+  });
+  [["brush", "Кисть", "закрасить полосу"], ["lasso", "Обвести", "залить внутри контура"]].forEach(function (o) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", o[0]);
+    b.innerHTML = o[1] + "<small>" + o[2] + "</small>";
+    b.addEventListener("click", function () { state.tool = o[0]; renderPanel(); });
+    $("tool").appendChild(b);
+  });
+  $("undo").addEventListener("click", function () {
+    var u = undoStack.pop();
+    if (!u) return;
+    if (u.cells) { customs[u.key] = withPresent(u.cells); } else delete customs[u.key];
+    persist(u.key); draw(); renderPanel();
+  });
+  // Весь экран: площадка занимает всё окно, даже если браузер не даёт настоящий полноэкранный режим.
+  var pageEl = document.querySelector(".page");
+  function setFull(on) {
+    pageEl.classList.toggle("full", on);
+    pageEl.classList.toggle("no-side", on && window.innerWidth <= 860);
+    document.documentElement.style.overflow = on ? "hidden" : "";
+    $("fs").textContent = on ? "Выйти" : "На весь экран";
+    $("side-toggle").hidden = !on;
+    if (typeof bLayout === "function") setTimeout(bLayout, 60);
+  }
+  function exitNative() {
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+  }
+  $("fs").addEventListener("click", function () {
+    if (pageEl.classList.contains("full")) { setFull(false); exitNative(); return; }
+    setFull(true);
+    if (pageEl.requestFullscreen) { try { var fp = pageEl.requestFullscreen(); if (fp && fp.catch) fp.catch(function () {}); } catch (e) {} }
+  });
+  $("side-toggle").addEventListener("click", function () { pageEl.classList.toggle("no-side"); });
+  var wasNative = false;
+  document.addEventListener("fullscreenchange", function () {
+    if (wasNative && !document.fullscreenElement) setFull(false);
+    wasNative = !!document.fullscreenElement;
+    setTimeout(bLayout, 60);
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && pageEl.classList.contains("full")) { setFull(false); exitNative(); } });
+  $("edit-toggle").addEventListener("click", function () { state.edit = !state.edit; state.selected = null; draw(); renderPanel(); });
+  $("zones-reset").addEventListener("click", function () { remember(); var k = zoneKey(); delete customs[k]; persist(k); draw(); renderPanel(); });
+
+  [4, 3, 2, 5, 6, 1].forEach(function (n) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", String(n)); b.textContent = "Зона " + n;
+    b.style.fontSize = "13px";
+    b.addEventListener("click", function () {
+      state.ourZone = n; cover.ax = OUR_POS[n][0]; cover.ay = OUR_POS[n][1];
+      applyScenario(false);
+    });
+    $("our").appendChild(b);
+  });
+
+  // ———— Планшет: полная площадка без зон ————
+  var bSvg = $("board"), bRoot = el("g", {}, bSvg);
+  var bStart = function () {
+    var pos = {};
+    [[1, 7.5, 6.5], [2, 7.5, 2], [3, 4.5, 2], [4, 1.5, 2], [5, 1.5, 6.5], [6, 4.5, 6.5]].forEach(function (a) {
+      pos["u" + a[0]] = [a[1], a[2]];
+      pos["o" + a[0]] = [COURT - a[1], -a[2]];
+    });
+    pos.ball = [4.5, -2.4];
+    return pos;
+  };
+  var bState = { pos: bStart(), strokes: [], opp: true, block: { n: 0, x: 4.5 }, shadow: true };
+  function bNorm(v) {
+    var b = v.block && typeof v.block.n === "number" && typeof v.block.x === "number" ? v.block : { n: 0, x: 4.5 };
+    v.block = { n: Math.max(0, Math.min(3, Math.round(b.n))), x: Math.max(0, Math.min(COURT, b.x)) };
+    v.shadow = v.shadow !== false;
+    return v;
+  }
+  var bTool = "move", bColor = "#ffffff", bUndo = [], bDoc = null, bTimer = null;
+  var B_COLORS = ["#ffffff", "#ffd23f", "#ff8a2a", "#66e3cf", "#ff8d7d"];
+  function bValid(v) {
+    if (!v || !v.pos || !Array.isArray(v.strokes)) return false;
+    return Object.keys(bStart()).every(function (k) { return Array.isArray(v.pos[k]) && typeof v.pos[k][0] === "number" && typeof v.pos[k][1] === "number"; }) &&
+      v.strokes.every(function (t) { return t && Array.isArray(t.pts) && t.pts.every(function (q) { return Array.isArray(q) && typeof q[0] === "number" && typeof q[1] === "number"; }) && B_COLORS.indexOf(t.color) >= 0 && ["arrow", "dash", "pen"].indexOf(t.tool) >= 0; });
+  }
+  try { var bSaved = JSON.parse(localStorage.getItem("vb-board") || "null"); if (bValid(bSaved)) bState = bNorm(bSaved); } catch (e) {}
+  function bSave() {
+    clearTimeout(bTimer);
+    bTimer = setTimeout(function () {
+      if (bDoc) bDoc.set({ pos: bState.pos, strokes: bState.strokes.map(function (t) { return { tool: t.tool, color: t.color, pts: t.pts.map(function (q) { return { x: q[0], y: q[1] }; }) }; }), opp: bState.opp, block: bState.block, shadow: bState.shadow }).catch(function () {});
+      else { try { localStorage.setItem("vb-board", JSON.stringify(bState)); } catch (e) {} }
+    }, 400);
+  }
+  function bRemember() { bUndo.push(JSON.stringify(bState)); if (bUndo.length > 40) bUndo.shift(); }
+  // Разметка
+  el("rect", { x: -20, y: -20, width: 40, height: 40, style: "fill:var(--floor)" }, bRoot);
+  el("rect", { x: 0, y: -9, width: 9, height: 18, style: "fill:var(--court)" }, bRoot);
+  el("rect", { x: 0, y: -9, width: 9, height: 18, fill: "none", "stroke-width": ".06", style: "stroke:var(--court-line)" }, bRoot);
+  [3, -3].forEach(function (y) { el("line", { x1: 0, x2: 9, y1: y, y2: y, "stroke-width": ".05", style: "stroke:var(--court-line)" }, bRoot); });
+  el("line", { x1: -.5, x2: 9.5, y1: 0, y2: 0, "stroke-width": ".14", stroke: "#ffffff" }, bRoot);
+  var bDefs = el("defs", {}, bSvg), bPat = el("pattern", { id: "hatch-board", width: ".28", height: ".28", patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, bDefs);
+  el("rect", { width: ".28", height: ".28", fill: "#0c2233", "fill-opacity": ".22" }, bPat);
+  el("rect", { width: ".07", height: ".28", fill: "#0c2233", "fill-opacity": ".6" }, bPat);
+  var bShadow = el("polygon", { fill: "url(#hatch-board)", style: "pointer-events:none" }, bRoot);
+  var bStrokes = el("g", {}, bRoot);
+  var bBlock = el("g", { class: "btok", "data-k": "block" }, bRoot);
+  var bBlockHit = el("rect", { y: "-.55", height: "1.1", fill: "#ffffff", "fill-opacity": "0", "pointer-events": "all" }, bBlock);
+  var bBlockBar = el("rect", { height: ".22", rx: ".04", fill: "#0c2233", stroke: "#ffffff", "stroke-width": ".04" }, bBlock);
+  var bBlockLabel = el("g", {}, bBlock);
+  el("text", { "text-anchor": "middle", y: ".09", "font-size": ".26", "font-weight": "600", fill: "#ffffff", stroke: "#0c2233", "stroke-width": ".07", "paint-order": "stroke" }, bBlockLabel).textContent = "блок";
+  var bTokens = el("g", {}, bRoot), bTok = {}, bWide = false;
+  function bBlockGeom() {
+    var w = BLOCK_W * bState.block.n, c = Math.max(w / 2, Math.min(COURT - w / 2, bState.block.x));
+    return { c: c, l: c - w / 2, r: c + w / 2, w: w };
+  }
+  function bRenderBlock() {
+    var on = bState.block.n > 0 && !bAnim, ball = bState.pos.ball;
+    bBlock.style.display = on ? "" : "none";
+    bBlock.style.pointerEvents = bTool === "move" ? "" : "none";
+    bShadow.setAttribute("points", "");
+    if (!on) return;
+    var g = bBlockGeom(), sgn = ball[1] < 0 ? 1 : -1;
+    bBlock.setAttribute("transform", "translate(" + g.c.toFixed(2) + " 0)");
+    bBlockHit.setAttribute("x", (-g.w / 2 - .2).toFixed(2)); bBlockHit.setAttribute("width", (g.w + .4).toFixed(2));
+    bBlockBar.setAttribute("x", (-g.w / 2).toFixed(2)); bBlockBar.setAttribute("width", g.w.toFixed(2));
+    bBlockBar.setAttribute("y", sgn > 0 ? "0" : "-.22");
+    bBlockLabel.setAttribute("transform", "translate(0 " + (sgn * .46) + ")" + (bWide ? " rotate(-90)" : ""));
+    if (!bState.shadow) return;
+    // Тень: лучи от мяча через края блока, условная глубина 5 м от сетки.
+    var ay = -sgn * Math.max(.5, Math.abs(ball[1])), ax = ball[0], d = sgn * SHADOW_DEPTH;
+    var poly = [[g.l, 0], [g.r, 0], [rayX(ax, ay, g.r, d), d], [rayX(ax, ay, g.l, d), d]];
+    poly = clip(clip(poly, -1, 0, 0), 1, 0, COURT);
+    bShadow.setAttribute("points", poly.length ? poly.map(function (q) { return q[0].toFixed(2) + "," + q[1].toFixed(2); }).join(" ") : "");
+  }
+  function bMakeToken(key, r, fill, stroke, label, textFill) {
+    var g = el("g", { class: "btok", "data-k": key }, bTokens);
+    el("circle", { r: ".7", fill: "#ffffff", "fill-opacity": "0", "pointer-events": "all" }, g);
+    el("circle", { r: r, stroke: stroke, "stroke-width": ".05", style: fill }, g);
+    var inner = el("g", {}, g);
+    if (label) {
+      el("text", { "text-anchor": "middle", y: ".13", "font-size": ".38", "font-weight": "700", fill: textFill }, inner).textContent = label;
+      el("text", { "text-anchor": "middle", y: ".64", "font-size": ".25", "font-weight": "600", fill: "#ffffff", stroke: "#0c2233", "stroke-width": ".07", "paint-order": "stroke" }, inner).textContent = roleFor(+label, 1);
+    }
+    g._inner = inner;
+    bTok[key] = g;
+  }
+  ALL.forEach(function (p) {
+    bMakeToken("u" + p, ".36", "fill:var(--p" + p + ")", "#0c2233", String(p), "#0c2233");
+    bMakeToken("o" + p, ".36", "fill:#0c2233", "#ffffff", String(p), "#ffffff");
+  });
+  bMakeToken("ball", ".26", "fill:var(--ball)", "#ffffff", "", "");
+  function bArrowHead(t, parent) {
+    var n = t.pts.length, a = t.pts[n - 2], z = t.pts[n - 1], an = Math.atan2(z[1] - a[1], z[0] - a[0]), l = .36, w = .17;
+    var pts = [[z[0], z[1]], [z[0] - l * Math.cos(an) + w * Math.sin(an), z[1] - l * Math.sin(an) - w * Math.cos(an)], [z[0] - l * Math.cos(an) - w * Math.sin(an), z[1] - l * Math.sin(an) + w * Math.cos(an)]];
+    el("polygon", { points: pts.map(function (q) { return q[0].toFixed(2) + "," + q[1].toFixed(2); }).join(" "), fill: t.color, style: "pointer-events:none" }, parent);
+  }
+  function bDrawStroke(t, parent) {
+    if (t.pts.length < 2) return;
+    el("polyline", { points: t.pts.map(function (q) { return q[0].toFixed(2) + "," + q[1].toFixed(2); }).join(" "), fill: "none", stroke: t.color, "stroke-width": ".08", "stroke-linecap": "round", "stroke-linejoin": "round", "stroke-dasharray": t.tool === "dash" ? ".26 .2" : "none", style: "pointer-events:none" }, parent);
+    if (t.tool !== "pen") bArrowHead(t, parent);
+  }
+  var bLive = null;
+  function bRender() {
+    while (bStrokes.firstChild) bStrokes.removeChild(bStrokes.firstChild);
+    if (!bAnim) bState.strokes.forEach(function (t) { bDrawStroke(t, bStrokes); });
+    if (bLive) bDrawStroke(bLive, bStrokes);
+    Object.keys(bTok).forEach(function (k) {
+      var q = bAnim && bAnim.pos[k] ? bAnim.pos[k] : bState.pos[k], g = bTok[k], sc = bAnim && bAnim.scale[k] ? " scale(" + bAnim.scale[k].toFixed(2) + ")" : "";
+      g.setAttribute("transform", "translate(" + q[0].toFixed(2) + " " + q[1].toFixed(2) + ")" + sc);
+      g.style.display = k[0] === "o" && !bState.opp ? "none" : "";
+      g.style.pointerEvents = bTool === "move" ? "" : "none";
+      g._inner.setAttribute("transform", bWide ? "rotate(-90)" : "");
+    });
+    bRenderBlock();
+    setPressed($("b-block"), String(bState.block.n));
+    $("b-shadow").checked = !!bState.shadow;
+    bSvg.classList.toggle("drawing", bTool !== "move");
+    setPressed($("b-tool"), bTool);
+    Array.prototype.forEach.call($("b-color").querySelectorAll("button"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-c") === bColor)); });
+    $("b-undo").disabled = !bUndo.length;
+    $("b-clear").disabled = !bState.strokes.length;
+    $("b-opp").checked = !!bState.opp;
+  }
+  // На широком экране во весь экран площадка лежит горизонтально.
+  function bLayout() {
+    bWide = pageEl.classList.contains("full") && pageEl.classList.contains("board") && bSvg.clientWidth > bSvg.clientHeight;
+    bSvg.setAttribute("viewBox", bWide ? "-9.9 -0.9 19.8 10.8" : "-0.9 -9.9 10.8 19.8");
+    bRoot.setAttribute("transform", bWide ? "rotate(90)" : "");
+    bRender();
+  }
+  function bPoint(e) {
+    var pt = bSvg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(bRoot.getScreenCTM().inverse());
+  }
+  function segDist(q, a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((q.x - a[0]) * dx + (q.y - a[1]) * dy) / l)) : 0;
+    return Math.hypot(q.x - a[0] - t * dx, q.y - a[1] - t * dy);
+  }
+  function bErase(q) {
+    for (var i = bState.strokes.length - 1; i >= 0; i--) {
+      var pts = bState.strokes[i].pts;
+      for (var k = 0; k + 1 < pts.length; k++) {
+        if (segDist(q, pts[k], pts[k + 1]) < .3) { bState.strokes.splice(i, 1); return true; }
+      }
+    }
+    return false;
+  }
+  var bDrag = null, bDrawing = false, bErased = false;
+  function bLockTouch(e) {
+    if (bTool !== "move" || (e.target.closest && e.target.closest(".btok"))) e.preventDefault();
+  }
+  bSvg.addEventListener("touchstart", bLockTouch, { passive: false });
+  bSvg.addEventListener("touchmove", bLockTouch, { passive: false });
+  bSvg.addEventListener("pointerdown", function (e) {
+    if (bAnim) bStop();
+    var q = bPoint(e);
+    if (bTool === "move") {
+      var g = e.target.closest ? e.target.closest(".btok") : null;
+      if (!g) return;
+      bRemember();
+      bDrag = g.getAttribute("data-k");
+    } else if (bTool === "erase") {
+      bRemember(); bErased = false; bDrawing = true;
+      if (bErase(q)) bErased = true;
+    } else {
+      bDrawing = true;
+      bLive = { tool: bTool, color: bColor, pts: [[q.x, q.y], [q.x, q.y]] };
+    }
+    bSvg.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    bRender();
+  });
+  bSvg.addEventListener("pointermove", function (e) {
+    if (!bDrag && !bDrawing) return;
+    var q = bPoint(e);
+    if (bDrag === "block") {
+      bState.block.x = Math.max(0, Math.min(COURT, q.x));
+    } else if (bDrag) {
+      bState.pos[bDrag] = [Math.max(-.7, Math.min(9.7, q.x)), Math.max(-9.7, Math.min(9.7, q.y))];
+    } else if (bTool === "erase") {
+      if (bErase(q)) bErased = true;
+    } else if (bLive.tool === "pen") {
+      var last = bLive.pts[bLive.pts.length - 1];
+      if (Math.hypot(q.x - last[0], q.y - last[1]) > .08) bLive.pts.push([+q.x.toFixed(2), +q.y.toFixed(2)]);
+    } else {
+      bLive.pts[1] = [+q.x.toFixed(2), +q.y.toFixed(2)];
+    }
+    bRender();
+  });
+  function bEnd() {
+    if (bDrag) { bDrag = null; bSave(); }
+    if (bDrawing) {
+      bDrawing = false;
+      if (bTool === "erase") { if (bErased) bSave(); else bUndo.pop(); }
+      else if (bLive) {
+        var a = bLive.pts[0], z = bLive.pts[bLive.pts.length - 1];
+        if (bLive.pts.length > 2 || Math.hypot(z[0] - a[0], z[1] - a[1]) > .25) { bRemember(); bState.strokes.push(bLive); bSave(); }
+        bLive = null;
+      }
+    }
+    bRender();
+  }
+  bSvg.addEventListener("pointerup", bEnd);
+  bSvg.addEventListener("pointercancel", bEnd);
+  [["move", "Двигать"], ["arrow", "Стрелка"], ["dash", "Пунктир"], ["pen", "Перо"], ["erase", "Ластик"]].forEach(function (o) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", o[0]); b.textContent = o[1];
+    b.addEventListener("click", function () { bTool = o[0]; bRender(); });
+    $("b-tool").appendChild(b);
+  });
+  B_COLORS.forEach(function (c) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-c", c); b.setAttribute("aria-label", "Цвет рисунка " + c);
+    b.innerHTML = '<span class="swatch" style="background:' + c + ';outline:1px solid var(--line)"></span>';
+    b.addEventListener("click", function () { bColor = c; if (bTool === "move" || bTool === "erase") bTool = "arrow"; bRender(); });
+    $("b-color").appendChild(b);
+  });
+  // ———— Анимация комбинаций ————
+  // Время в секундах. Приём и первая передача общие, дальше у каждой комбинации свои разбеги.
+  var C_S = 2.3; // момент второй передачи
+  var C_START = { u1: [7.4, 7], u2: [7.6, 2.8], u3: [4.2, 2.6], u4: [1.8, 3.6], u5: [1.8, 7], u6: [4.5, 7.2] };
+  var C_SETTER = [5.8, .6];
+  var C_OUT = { u4: [-.45, 3.4], u2: [9.45, 3.4] };
+  var COMBOS = [
+    { id: "flank", name: "Фланг", sub: "высокая в зону 4", setDur: 1.1, arc: .9, set: [.6, .6], hit: [7.8, -6.5],
+      runs: [["u4", [[.6, .75]], 1.1, 1, true], ["u3", [[4.8, .7]], .45, .8, true]],
+      text: "Центральный отвлекает блок, а связующий даёт высокую передачу доигровщику в зону 4." },
+    { id: "quick", name: "Быстрая", sub: "первый темп в зоне 3", setDur: .4, arc: .15, set: [4.9, .55], hit: [2.5, -5.5],
+      runs: [["u3", [[4.9, .75]], .4, .9, true], ["u4", [[.6, .9]], .6, 1, false], ["u2", [[8.4, .9]], .6, 1, false]],
+      text: "Центральный выпрыгивает ещё до передачи. Связующий даёт короткий низкий мяч прямо ему в руку." },
+    { id: "zone", name: "Зона", sub: "ЦБ бьёт между 4 и 3", setDur: .6, arc: .2, set: [3, .55], hit: [7, -6],
+      runs: [["u3", [[3, .75]], .6, 1, true], ["u4", [[.6, .9]], .7, 1, false], ["u2", [[8.4, .9]], .7, 1, false]],
+      text: "Центральный уходит от связующего и бьёт в зазоре между зонами 4 и 3. Передача быстрая и низкая, блок не успевает сомкнуться." },
+    { id: "cross", name: "Крест", sub: "ЦБ в зону, доигровщик в зону 3", setDur: .75, arc: .35, set: [4.4, .6], hit: [7.2, -6],
+      runs: [["u3", [[3, .75]], .35, .9, true], ["u4", [[4.4, .75]], .75, 1.2, true]],
+      text: "Центральный прыгает в зону между 4 и 3 и уводит блок. Доигровщик забегает у него за спиной и бьёт в зоне 3." },
+    { id: "tandem", name: "Тандем", sub: "ЦБ в зону, диагональный у связки", setDur: .65, arc: .3, set: [4.8, .6], hit: [1.8, -6.5],
+      runs: [["u3", [[3, .75]], .3, .9, true], ["u2", [[4.8, .75]], .65, 1.1, true]],
+      text: "Центральный прыгает в зону между 4 и 3 и забирает блок. Диагональный бьёт на метр перед связующим." },
+    { id: "tandem-left", name: "Тандем слева", sub: "диагональный левее центрального", setDur: .85, arc: .35, set: [3.9, .6], hit: [7.3, -6.2],
+      runs: [["u3", [[5, .7]], .3, .8, true], ["u2", [[5.2, 1.9], [3.9, .75]], .85, 1.3, true]],
+      text: "Центральный прыгает на быструю перед связующим. Диагональный обегает его сзади и бьёт слева от него." },
+    { id: "slide", name: "Забегание", sub: "центральный в зону 2", setDur: .7, arc: .3, set: [8.4, .55], hit: [3, -6.5],
+      runs: [["u3", [[6.3, 1.7], [8.4, .75]], .7, 1.2, true], ["u2", [[8, 3.2]], .4, .6, false]],
+      text: "Центральный обегает связующего сзади и бьёт в зоне 2 с одной ноги." },
+    { id: "pipe", name: "Пайп", sub: "удар из зоны 6", setDur: .85, arc: .55, set: [4.5, 3.2], hit: [4.2, -7.5],
+      runs: [["u6", [[4.5, 3.4]], .85, 1.4, true], ["u3", [[5, .75]], .35, .8, true]],
+      text: "Центральный уводит блок быстрой. Доигровщик с задней линии прыгает до линии 3 м и бьёт по центру." }
+  ];
+  var bAnim = null, bRaf = null, bSpeed = 1, bTrail = el("g", { style: "pointer-events:none" });
+  bRoot.insertBefore(bTrail, bBlock);
+  function lerpPath(pts, k) {
+    var total = 0, i, seg = [];
+    for (i = 0; i + 1 < pts.length; i++) { seg[i] = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); total += seg[i]; }
+    var d = Math.max(0, Math.min(1, k)) * total;
+    for (i = 0; i < seg.length; i++) {
+      if (d <= seg[i] || i === seg.length - 1) { var f = seg[i] ? d / seg[i] : 0; return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f]; }
+      d -= seg[i];
+    }
+    return pts[pts.length - 1];
+  }
+  function ease(k) { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); }
+  function comboPlan(c) {
+    var H = C_S + c.setDur, runs = [];
+    runs.push({ k: "u1", pts: [C_START.u1, C_SETTER], t0: .4, t1: C_S - .2, jump: false });
+    c.runs.forEach(function (r) {
+      var t0 = C_S + r[2] - r[3], t1 = C_S + r[2], first = C_START[r[0]];
+      // Крайние нападающие сначала отходят за боковую линию и разбегаются из аута.
+      if (C_OUT[r[0]] && r[1][r[1].length - 1][1] < 1.5) {
+        runs.push({ k: r[0], pts: [first, C_OUT[r[0]]], t0: Math.min(.9, t0 - .4), t1: t0, jump: false });
+        first = C_OUT[r[0]];
+      }
+      runs.push({ k: r[0], pts: [first].concat(r[1]), t0: t0, t1: t1, jump: r[4] });
+    });
+    // Блок соперника: двое ближайших к точке удара игроков передней линии.
+    var opp = bStart(), front = ["o2", "o3", "o4"].sort(function (a, b) { return Math.abs(opp[a][0] - c.set[0]) - Math.abs(opp[b][0] - c.set[0]); });
+    var bx = Math.max(.9, Math.min(8.1, c.set[0])), late = c.setDur < .5 ? .05 : .3;
+    [front[0], front[1]].forEach(function (k, i) {
+      var dir = opp[front[1]][0] > opp[front[0]][0] ? 1 : -1;
+      runs.push({ k: k, pts: [opp[k], [bx + (i ? dir * .42 : -dir * .42), -.45]], t0: H - .55 + late, t1: H + late, jump: true });
+    });
+    return { H: H, end: H + .55, runs: runs,
+      ball: [
+        { from: [4.5, -9], to: C_START.u5, t0: 0, t1: 1.2, arc: 1 },
+        { from: C_START.u5, to: C_SETTER, t0: 1.2, t1: C_S, arc: .7 },
+        { from: C_SETTER, to: c.set, t0: C_S, t1: H, arc: c.arc },
+        { from: c.set, to: c.hit, t0: H, t1: H + .5, arc: .1 }
+      ],
+      steps: [[0, "Подача соперника, либеро принимает."], [1.2, "Мяч идёт к сетке, связующий вышел из зоны 1."], [C_S - .6, c.text]] };
+  }
+  function bFrame(now) {
+    bRaf = null;
+    if (!bAnim) return;
+    if (!bAnim.paused) {
+      bAnim.t += (now - bAnim.last) / 1000 * bSpeed;
+    }
+    bAnim.last = now;
+    var a = bAnim, p = a.plan, t = Math.min(a.t, p.end), pos = a.pos, scale = {};
+    Object.keys(C_START).forEach(function (k) { pos[k] = C_START[k]; });
+    Object.keys(bStart()).forEach(function (k) { if (k[0] === "o") pos[k] = bStart()[k]; });
+    while (bTrail.firstChild) bTrail.removeChild(bTrail.firstChild);
+    p.runs.forEach(function (r) {
+      var k = (t - r.t0) / (r.t1 - r.t0), e = ease(k);
+      if (k > 0) pos[r.k] = lerpPath(r.pts, e);
+      if (k > 0 && r.k[0] === "u") {
+        var done = r.pts.slice(0, 1), steps = 12;
+        for (var i = 1; i <= steps; i++) done.push(lerpPath(r.pts, e * i / steps));
+        el("polyline", { points: done.map(function (q) { return q[0].toFixed(2) + "," + q[1].toFixed(2); }).join(" "), fill: "none", stroke: "#ffffff", "stroke-opacity": ".55", "stroke-width": ".05", "stroke-dasharray": ".12 .1" }, bTrail);
+      }
+      if (r.jump) { var dj = t - r.t1; if (dj > -.25 && dj < .3) scale[r.k] = 1 + .3 * Math.cos(dj / .3 * Math.PI / 2); }
+    });
+    var bp = p.ball[0].from, bh = 0, lines = [];
+    p.ball.forEach(function (s) {
+      if (t < s.t0) return;
+      var k = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+      bp = [s.from[0] + (s.to[0] - s.from[0]) * k, s.from[1] + (s.to[1] - s.from[1]) * k];
+      if (k < 1) bh = Math.sin(k * Math.PI) * s.arc;
+      lines.push([s.from, bp]);
+    });
+    lines.forEach(function (l) { el("line", { x1: l[0][0], y1: l[0][1], x2: l[1][0], y2: l[1][1], stroke: "#ff8a2a", "stroke-width": ".06" }, bTrail); });
+    pos.ball = bp; scale.ball = 1 + bh * .9;
+    a.scale = scale;
+    var cap = "";
+    p.steps.forEach(function (st) { if (t >= st[0]) cap = st[1]; });
+    if (t >= p.H && t < p.end) cap = "Удар!";
+    if (t >= p.end) cap = a.combo.text;
+    if ($("b-caption").textContent !== cap) $("b-caption").textContent = cap;
+    bRender();
+    if (a.t < p.end || a.paused) bRaf = requestAnimationFrame(bFrame);
+  }
+  function bPlayCombo(c) {
+    bStopRaf();
+    bAnim = { combo: c, plan: comboPlan(c), t: 0, last: performance.now(), paused: false, pos: {}, scale: {} };
+    $("b-play").hidden = false; $("b-caption").hidden = false; $("b-pause").textContent = "Пауза";
+    setPressed($("b-combos"), c.id);
+    if (pageEl.classList.contains("full") && window.innerWidth <= 860) pageEl.classList.add("no-side");
+    if (!pageEl.classList.contains("full") && window.innerWidth <= 860) { try { bSvg.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {} }
+    bRaf = requestAnimationFrame(bFrame);
+  }
+  function bStopRaf() { if (bRaf) { cancelAnimationFrame(bRaf); bRaf = null; } }
+  function bStop() {
+    bStopRaf();
+    bAnim = null;
+    while (bTrail.firstChild) bTrail.removeChild(bTrail.firstChild);
+    $("b-play").hidden = true; $("b-caption").hidden = true;
+    setPressed($("b-combos"), "");
+    bRender();
+  }
+  COMBOS.forEach(function (c) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", c.id);
+    b.innerHTML = c.name + "<small>" + c.sub + "</small>";
+    b.addEventListener("click", function () { bPlayCombo(c); });
+    $("b-combos").appendChild(b);
+  });
+  $("b-pause").addEventListener("click", function () {
+    if (!bAnim) return;
+    if (bAnim.t >= bAnim.plan.end) { bPlayCombo(bAnim.combo); return; }
+    bAnim.paused = !bAnim.paused;
+    $("b-pause").textContent = bAnim.paused ? "Продолжить" : "Пауза";
+    if (!bRaf) bRaf = requestAnimationFrame(bFrame);
+  });
+  $("b-replay").addEventListener("click", function () { if (bAnim) bPlayCombo(bAnim.combo); });
+  $("b-speed").addEventListener("click", function () {
+    bSpeed = bSpeed === 1 ? .5 : 1;
+    $("b-speed").textContent = bSpeed === 1 ? "Медленнее" : "Обычная скорость";
+  });
+  $("b-stop").addEventListener("click", bStop);
+
+  $("b-undo").addEventListener("click", function () { var u = bUndo.pop(); if (u) { bState = JSON.parse(u); bSave(); bRender(); } });
+  $("b-clear").addEventListener("click", function () { bRemember(); bState.strokes = []; bSave(); bRender(); });
+  $("b-reset").addEventListener("click", function () { bRemember(); bState.pos = bStart(); bSave(); bRender(); });
+  [[0, "Нет"], [1, "1"], [2, "2"], [3, "3"]].forEach(function (o) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", String(o[0])); b.textContent = o[1];
+    b.addEventListener("click", function () {
+      bRemember();
+      if (!bState.block.n && o[0]) bState.block.x = bState.pos.ball[0];
+      bState.block.n = o[0];
+      bSave(); bRender();
+    });
+    $("b-block").appendChild(b);
+  });
+  $("b-shadow").addEventListener("change", function (e) { bRemember(); bState.shadow = e.target.checked; bSave(); bRender(); });
+  $("b-opp").addEventListener("change", function (e) { bRemember(); bState.opp = e.target.checked; bSave(); bRender(); });
+  [["zones", "Зоны и схемы"], ["board", "Планшет"]].forEach(function (o) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-v", o[0]); b.textContent = o[1];
+    b.addEventListener("click", function () {
+      if (o[0] !== "board" && bAnim) bStop();
+      pageEl.classList.toggle("board", o[0] === "board");
+      setPressed($("view"), o[0]);
+      bLayout();
+    });
+    $("view").appendChild(b);
+  });
+  setPressed($("view"), "zones");
+  window.addEventListener("resize", bLayout);
+
+  applyScenario(true);
+  bLayout();
+
+  // Общее хранилище: когда оно доступно, зоны видят все, кто открывает страницу.
+  if (window.claude && window.claude.use) {
+    window.claude.use("db").then(function (db) {
+      if (!db) return;
+      zonesDb = db.collection("zones");
+      bDoc = db.collection("board").doc("state");
+      bDoc.get().then(function (snap) {
+        if (!snap.exists) return;
+        var v = snap.data();
+        if (v && Array.isArray(v.strokes)) v.strokes = v.strokes.map(function (t) { return t && Array.isArray(t.pts) ? { tool: t.tool, color: t.color, pts: t.pts.map(function (q) { return q ? [q.x, q.y] : q; }) } : t; });
+        if (bValid(v)) { bState = bNorm(v); bRender(); }
+      }).catch(function () {});
+      sandboxDb = db.collection("sandbox").doc("layout");
+      sandboxDb.get().then(function (snap) {
+        if (snap.exists && applySandboxData(snap.data()) && state.sandbox) applyScenario(true);
+      }).catch(function () {});
+      setStatus("Изменения сохраняются автоматически. Их видят все, кому вы откроете эту страницу.");
+      zonesDb.onSnapshot(function (snap) {
+        if (painting) return;
+        var next = {};
+        snap.docs.forEach(function (d) { var v = d.data(), c = v && decodeGrid(v.grid); if (c) next[d.id] = c; });
+        customs = next;
+        if (!raf) { draw(); renderPanel(); }
+      }, function () { setStatus("Не удалось загрузить общие зоны. Обновите страницу."); });
+    });
+  }
+
+})();
+</script>
+
+</body>
+</html>
