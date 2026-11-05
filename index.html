@@ -142,12 +142,31 @@ html, body { height: 100%; overflow: hidden; }
 .page.full .controls[data-open="setter"] > #setter-box,
 .page.full .controls[data-open="our"] > #our-box { display: block; }
 .page.full .controls[data-open="edit"] > #edit-box { display: grid; }
-.page.full .controls[data-open="combo"] > #board-tools,
 .page.full .controls[data-open="color"] > #board-tools { display: grid; }
-.page.full .controls[data-open="combo"] #b-combo-box,
 .page.full .controls[data-open="color"] #b-color-box { display: block; }
 .page.full #edit-box { padding: 0; border: 0; background: none; }
 .page.full.show-details .details { display: grid; position: absolute; top: 0; right: 0; bottom: 0; width: min(380px, 100%); overflow-y: auto; align-content: start; padding: 44px 16px 16px; background: var(--bg); z-index: 4; box-shadow: -2px 0 14px rgba(0,0,0,.35); }
+#b3d-wrap { position: absolute; top: 0; right: 0; bottom: 0; left: 48px; z-index: 1; background: #0d3a5c; touch-action: none; }
+#b3d-wrap canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+#b3d-views { position: absolute; top: 8px; right: 8px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+#b3d-views button { font: 500 13px var(--body); padding: 6px 10px; color: var(--fg); background: var(--panel); border: 0; border-radius: 6px; cursor: pointer; }
+#b3d-msg { position: absolute; left: 8px; top: 8px; max-width: 45%; font-size: 12px; line-height: 1.3; color: var(--on-court); opacity: .8; }
+#b-caption { z-index: 2; }
+@media (max-height: 560px) { #b3d-wrap { left: 38px; } }
+@media (max-width: 860px) and (orientation: portrait) { #b3d-wrap { left: 0; bottom: var(--bar, 84px); } #b3d-msg { display: none; } }
+#b-play { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); width: min(820px, calc(100% - 112px)); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px; background: var(--panel); color: var(--fg); border-radius: 10px; box-shadow: 0 2px 14px rgba(0,0,0,.4); z-index: 3; }
+.pl-btn { display: grid; place-items: center; flex: none; width: 36px; height: 36px; padding: 0; color: var(--fg); background: var(--seg); border: 0; border-radius: 8px; cursor: pointer; }
+.pl-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#b-seek { flex: 1 1 140px; min-width: 100px; height: 36px; margin: 0; accent-color: var(--accent); cursor: pointer; touch-action: none; }
+#b-time { flex: none; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#b-play select { flex: none; height: 36px; max-width: 180px; padding: 0 6px; font: 500 14px var(--body); color: var(--fg); background: var(--seg); border: 0; border-radius: 8px; cursor: pointer; }
+.page.full #b-caption { bottom: 64px; }
+@media (max-width: 860px) { .page.full #b-caption { bottom: 110px; } }
+@media (max-width: 860px) and (orientation: portrait) {
+  #b-play { width: calc(100% - 16px); bottom: calc(var(--bar, 84px) + 8px); }
+  #b-play select#b-combos { flex: 1 1 110px; max-width: none; }
+  .page.full.board #b-caption { bottom: calc(var(--bar, 84px) + 108px); }
+}
 .details-close { position: absolute; top: 8px; right: 8px; }
 @media (max-height: 560px) { .page.full .controls { left: 44px; } }
 @media (max-width: 860px) and (orientation: portrait) {
@@ -165,7 +184,26 @@ html, body { height: 100%; overflow: hidden; }
   <div class="court-wrap">
     <svg id="court" viewBox="-0.9 -5.2 10.8 15.1" role="img" aria-label="Схема волейбольной площадки с зонами ответственности защитников"></svg>
     <svg id="board" viewBox="-0.9 -9.9 10.8 19.8" role="img" aria-label="Тактический планшет: площадка с игроками и рисунками"></svg>
+    <div id="b3d-wrap" hidden>
+      <div id="b3d-msg">Тяните, чтобы вращать, колёсиком или двумя пальцами меняйте масштаб.</div>
+      <div id="b3d-views" role="group" aria-label="Вид камеры">
+        <button type="button" data-cam="back">За нашей спиной</button>
+        <button type="button" data-cam="side">Сбоку</button>
+        <button type="button" data-cam="top">Сверху</button>
+        <button type="button" data-cam="opp">От соперника</button>
+      </div>
+    </div>
     <div id="b-caption" aria-live="polite" hidden></div>
+    <div id="b-play" role="group" aria-label="Управление воспроизведением" hidden>
+      <button class="pl-btn" id="b-pause" type="button" aria-label="Пауза" title="Пауза"></button>
+      <button class="pl-btn" id="b-replay" type="button" aria-label="Сначала" title="Сначала"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.200M4 4v5h5"/></svg></button>
+      <input id="b-seek" type="range" min="0" max="1" step="0.01" value="0" aria-label="Время анимации">
+      <span id="b-time">0,0 / 0,0 с</span>
+      <select id="b-combos" aria-label="Комбинация"></select>
+      <select id="b-speed" aria-label="Скорость"><option value="0.25">0,25×</option><option value="0.5">0,5×</option><option value="1" selected>1×</option></select>
+      <button class="reset" id="b-3d" type="button" style="margin:0">3D</button>
+      <button class="pl-btn" id="b-stop" type="button" aria-label="Закрыть" title="Закрыть"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
     <div id="z-iconbar" class="iconbar" role="toolbar" aria-label="Настройки схемы"></div>
     <div id="b-iconbar" class="iconbar" role="toolbar" aria-label="Инструменты планшета"></div>
     <div class="court-bar">
@@ -180,16 +218,6 @@ html, body { height: 100%; overflow: hidden; }
       <div class="seg" id="view" role="group" aria-label="Раздел"></div>
     </div>
     <div id="board-tools">
-      <div id="b-combo-box">
-        <span class="field-label" id="l-combo">Комбинации</span>
-        <div class="seg two" id="b-combos" role="group" aria-labelledby="l-combo"></div>
-        <div class="row" id="b-play" style="margin-top:8px" hidden>
-          <button class="reset" id="b-pause" type="button" style="margin-left:0">Пауза</button>
-          <button class="reset" id="b-replay" type="button" style="margin-left:0">Повторить</button>
-          <button class="reset" id="b-speed" type="button" style="margin-left:0">Медленнее</button>
-          <button class="reset" id="b-stop" type="button" style="margin-left:0">Закрыть</button>
-        </div>
-      </div>
       <div><span class="field-label" id="l-bt">Инструмент</span><div class="seg two" id="b-tool" role="group" aria-labelledby="l-bt"></div></div>
       <div id="b-color-box"><span class="field-label">Цвет</span><div class="palette" id="b-color"></div></div>
       <div class="row">
@@ -1393,7 +1421,7 @@ html, body { height: 100%; overflow: hidden; }
     shots: '<path d="M12 3v18M12 3L4 19M12 3l8 16M9 18l3 3 3-3"/>', shadow: '<path d="M9 4h6l5 16H4zM8 12l5-5M6.5 18l9-9M11 19l6-6"/>',
     reset: '<path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/>', edit: '<path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>', full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
-    combo: '<path d="M6 4l13 8-13 8z"/>', color: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18c2 0 2-2 1-3s0-3 2-3h4c1 0 2-1 2-3"/><circle cx="8" cy="10" r=".6"/><circle cx="12" cy="7" r=".6"/>',
+    combo: '<path d="M6 4l13 8-13 8z"/>', cube: '<path d="M12 3l8 4.500v9L12 21l-8-4.500v-9zM12 12l8-4.500M12 12v9M12 12L4 7.500"/>', color: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18c2 0 2-2 1-3s0-3 2-3h4c1 0 2-1 2-3"/><circle cx="8" cy="10" r=".6"/><circle cx="12" cy="7" r=".6"/>',
     opp: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 6-5s6 2 6 5M17 5l4 4M21 5l-4 4"/>', clear: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
   };
   function railBtn(bar, key, label, onClick) {
@@ -1409,7 +1437,7 @@ html, body { height: 100%; overflow: hidden; }
   }
   svg.addEventListener("pointerdown", closePopOnCourt, true);
   $("board").addEventListener("pointerdown", closePopOnCourt, true);
-  function switchView() { $("view").querySelector('[data-v="' + (pageEl.classList.contains("board") ? "zones" : "board") + '"]').click(); closePop(); pageEl.classList.remove("show-details"); syncRails(); }
+  function switchView() { if (!$("b3d-wrap").hidden) toggle3d(); $("view").querySelector('[data-v="' + (pageEl.classList.contains("board") ? "zones" : "board") + '"]').click(); closePop(); pageEl.classList.remove("show-details"); syncRails(); }
   var zBar = $("z-iconbar");
   [["view", "Перейти на планшет", switchView],
    ["mode", "Ситуация", function () { togglePop("mode"); }],
@@ -1452,12 +1480,12 @@ html, body { height: 100%; overflow: hidden; }
     railBtns["z-edit"].classList.toggle("on", !!state.edit);
     railBtns["z-info"].setAttribute("aria-pressed", String(pageEl.classList.contains("show-details")));
     if (railBtns["b-combo"]) {
-      railBtns["b-combo"].setAttribute("aria-pressed", String(open === "combo"));
-      railBtns["b-combo"].classList.toggle("on", !!bAnim);
+      railBtns["b-combo"].setAttribute("aria-pressed", String(!!bAnim));
       railBtns["b-color"].setAttribute("aria-pressed", String(open === "color"));
       railBtns["b-color"].style.color = bColor === "#ffffff" ? "" : bColor;
       railBtns["b-opp"].setAttribute("aria-pressed", String(!!bState.opp));
       railBtns["b-clear"].disabled = !bState.strokes.length;
+      $("b-3d").textContent = $("b3d-wrap").hidden ? "3D" : "2D";
     }
   }
   $("edit-toggle").addEventListener("click", function () { state.edit = !state.edit; state.selected = null; draw(); renderPanel(); });
@@ -1713,7 +1741,7 @@ html, body { height: 100%; overflow: hidden; }
   bSvg.addEventListener("touchstart", bLockTouch, { passive: false });
   bSvg.addEventListener("touchmove", bLockTouch, { passive: false });
   bSvg.addEventListener("pointerdown", function (e) {
-    if (bAnim) bStop();
+    if (bAnim) return;
     var q = bPoint(e);
     if (bTool === "move") {
       var g = e.target.closest ? e.target.closest(".btok") : null;
@@ -1814,17 +1842,17 @@ html, body { height: 100%; overflow: hidden; }
       runs: [["u3", [[.8, 2.6], [2.2, .75]], .35, 1.5, true], ["u4", [[4.4, .75]], .75, 1.2, true]],
       text: "Центральный прыгает широко, ближе к зоне 4, и уводит блок. Доигровщик забегает у него за спиной и бьёт в зоне 3." },
     { id: "tandem", name: "Тандем", sub: "ЦБ в зону, диагональный у связки", setDur: .65, arc: .3, set: [4.8, .6], hit: [1.8, -6.5],
-      runs: [["u3", [[.8, 2.6], [2.2, .75]], .3, 1.5, true], ["u2", [[4.8, .75]], .65, 1.1, true]],
+      runs: [["u3", [[.8, 2.6], [2.2, .75]], .35, 1.5, true], ["u2", [[4.8, .75]], .65, 1.1, true]],
       text: "Центральный прыгает широко, ближе к зоне 4, и забирает блок. Диагональный бьёт на метр перед связующим." },
     { id: "tandem-left", name: "Тандем слева", sub: "диагональный левее центрального", setDur: .85, arc: .35, set: [3.9, .6], hit: [7.3, -6.2],
-      runs: [["u3", [[5, .7]], .3, .8, true], ["u2", [[5.2, 1.9], [3.9, .75]], .85, 1.3, true]],
+      runs: [["u3", [[5, .7]], .55, .8, true], ["u2", [[5.2, 1.9], [3.9, .75]], .85, 1.3, true]],
       text: "Центральный прыгает на быструю перед связующим. Диагональный обегает его сзади и бьёт слева от него." },
     { id: "slide", name: "Забегание", sub: "центральный в зону 2", setDur: .7, arc: .3, set: [8.4, .55], hit: [3, -6.5],
       runs: [["u3", [[6.3, 1.7], [8.4, .75]], .7, 1.2, true], ["u2", [[8, 3.2]], .4, .6, false]],
       text: "Центральный обегает связующего сзади и бьёт в зоне 2 с одной ноги." },
-    { id: "pipe", name: "Пайп", sub: "удар из зоны 6", setDur: .85, arc: .55, set: [4.5, 3.2], hit: [4.2, -7.5],
-      runs: [["u6", [[4.5, 3.4]], .85, 1.4, true], ["u3", [[5, .75]], .35, .8, true]],
-      text: "Центральный уводит блок быстрой. Доигровщик с задней линии прыгает до линии 3 м и бьёт по центру." }
+    { id: "pipe", name: "Пайп", sub: "удар из зоны 6", setDur: .85, arc: .55, set: [4.3, 1.9], hit: [4.2, -7.5],
+      runs: [["u6", [[4.3, 3.1], [4.3, 1.1]], 1.15, 1.7, true, .3, null, true], ["u3", [[5, 2.1], [5, .75]], .55, .95, true]],
+      text: "Центральный прыгает рядом со связующим, доигровщик чуть левее него. Они прыгают волной: центральный идёт вниз, доигровщик вверх. Доигровщик отталкивается за линией 3 м, впрыгивает в зону перед ней и бьёт по центру." }
   ];
   var bAnim = null, bRaf = null, bSpeed = 1, bTrail = el("g", { style: "pointer-events:none" });
   bRoot.insertBefore(bTrail, bBlock);
@@ -1840,58 +1868,74 @@ html, body { height: 100%; overflow: hidden; }
   }
   function ease(k) { k = Math.max(0, Math.min(1, k)); return k * k * (3 - 2 * k); }
   function comboPlan(c) {
-    var H = C_S + c.setDur, runs = [];
-    runs.push({ k: "u1", pts: [C_START.u1, C_SETTER], t0: .4, t1: C_S - .2, jump: false });
+    var S = c.S || C_S, H = S + c.setDur, runs = [], start = c.start || C_START, setterAt = c.setter || C_SETTER, passer = c.passer || "u5";
+    if (!c.custom) runs.push({ k: "u1", pts: [C_START.u1, C_SETTER], t0: .4, t1: S - .2, jump: false });
     c.runs.forEach(function (r) {
-      var t0 = C_S + r[2] - r[3], t1 = C_S + r[2], first = C_START[r[0]];
+      var t0 = S + r[2] - r[3], t1 = S + r[2], first = start[r[0]];
       // Крайние нападающие сначала отходят за боковую линию и разбегаются из аута.
-      if (C_OUT[r[0]] && r[1][r[1].length - 1][1] < 1.5) {
+      if (!c.custom && C_OUT[r[0]] && r[1][r[1].length - 1][1] < 1.5) {
         runs.push({ k: r[0], pts: [first, C_OUT[r[0]]], t0: Math.min(.9, t0 - .4), t1: t0, jump: false });
         first = C_OUT[r[0]];
       }
-      runs.push({ k: r[0], pts: [first].concat(r[1]), t0: t0, t1: t1, jump: r[4] });
+      // Прыжок с продвижением: r[5] показывает, за сколько до конца движения верхняя точка, r[6] откуда отталкивание.
+      if (r[6]) first = r[6];
+      runs.push({ k: r[0], pts: [first].concat(r[1]), t0: t0, t1: t1, jump: r[4], jumpAt: r[5] != null ? t1 - r[5] : t1, linear: !!r[7] });
     });
     // Блок соперника: двое ближайших к точке удара игроков передней линии.
     var opp = bStart(), front = ["o2", "o3", "o4"].sort(function (a, b) { return Math.abs(opp[a][0] - c.set[0]) - Math.abs(opp[b][0] - c.set[0]); });
-    var bx = Math.max(.9, Math.min(8.1, c.set[0])), late = c.setDur < .5 ? .05 : .3;
+    var bx = Math.max(.9, Math.min(8.1, c.set[0])), late = c.setDur < .5 || c.custom ? .05 : .3;
     [front[0], front[1]].forEach(function (k, i) {
       var dir = opp[front[1]][0] > opp[front[0]][0] ? 1 : -1;
       runs.push({ k: k, pts: [opp[k], [bx + (i ? dir * .42 : -dir * .42), -.45]], t0: H - .55 + late, t1: H + late, jump: true });
     });
-    return { H: H, end: H + .55, runs: runs,
+    // Что делает каждый игрок и когда: по этому двигаются руки.
+    var acts = [{ k: passer, pose: "pass", t0: .75, t1: 1.42 }, { k: "u1", pose: "set", t0: S - .45, t1: S + .14 }], hitter = null, hd = Infinity;
+    runs.forEach(function (r) {
+      if (r.jump && r.k[0] === "u") { var hj = r.jumpAt == null ? r.t1 : r.jumpAt; if (Math.abs(hj - H) < hd) { hd = Math.abs(hj - H); hitter = r; } }
+    });
+    runs.forEach(function (r) {
+      if (!r.jump) return;
+      var jt = r.jumpAt == null ? r.t1 : r.jumpAt;
+      if (r.k[0] === "o") { acts.push({ k: r.k, pose: "block", t0: jt - .4, t1: jt + .42 }); return; }
+      acts.push({ k: r.k, pose: "back", t0: jt - .65, t1: jt - .24 });
+      acts.push({ k: r.k, pose: r === hitter ? "spike" : "fake", t0: jt - .3, t1: jt + .42, peak: jt });
+    });
+    return { H: H, end: H + .55, runs: runs, start: start, acts: acts,
       ball: [
-        { from: [4.5, -9], to: C_START.u5, t0: 0, t1: 1.2, arc: 1 },
-        { from: C_START.u5, to: C_SETTER, t0: 1.2, t1: C_S, arc: .7 },
-        { from: C_SETTER, to: c.set, t0: C_S, t1: H, arc: c.arc },
+        { from: [4.5, -9], to: start[passer], t0: 0, t1: 1.2, arc: 1 },
+        { from: start[passer], to: setterAt, t0: 1.2, t1: S, arc: .7 },
+        { from: setterAt, to: c.set, t0: S, t1: H, arc: c.arc },
         { from: c.set, to: c.hit, t0: H, t1: H + .5, arc: .1 }
       ],
-      steps: [[0, "Подача соперника, либеро принимает."], [1.2, "Мяч идёт к сетке, связующий вышел из зоны 1."], [C_S - .6, c.text]] };
+      steps: c.steps || [[0, "Подача соперника, либеро принимает."], [1.2, "Мяч идёт к сетке, связующий вышел из зоны 1."], [S - .6, c.text]] };
   }
   function bFrame(now) {
     bRaf = null;
     if (!bAnim) return;
     if (!bAnim.paused) {
-      bAnim.t += (now - bAnim.last) / 1000 * bSpeed;
+      bAnim.t = Math.min(bAnim.plan.end, bAnim.t + (now - bAnim.last) / 1000 * bSpeed);
     }
     bAnim.last = now;
     var a = bAnim, p = a.plan, t = Math.min(a.t, p.end), pos = a.pos, scale = {};
-    Object.keys(C_START).forEach(function (k) { pos[k] = C_START[k]; });
+    Object.keys(p.start).forEach(function (k) { pos[k] = p.start[k]; });
     Object.keys(bStart()).forEach(function (k) { if (k[0] === "o") pos[k] = bStart()[k]; });
     while (bTrail.firstChild) bTrail.removeChild(bTrail.firstChild);
     p.runs.forEach(function (r) {
-      var k = (t - r.t0) / (r.t1 - r.t0), e = ease(k);
+      var k = (t - r.t0) / (r.t1 - r.t0), e = r.linear ? Math.max(0, Math.min(1, k)) : ease(k);
       if (k > 0) pos[r.k] = lerpPath(r.pts, e);
       if (k > 0 && r.k[0] === "u") {
         var done = r.pts.slice(0, 1), steps = 12;
         for (var i = 1; i <= steps; i++) done.push(lerpPath(r.pts, e * i / steps));
         el("polyline", { points: done.map(function (q) { return q[0].toFixed(2) + "," + q[1].toFixed(2); }).join(" "), fill: "none", stroke: "#ffffff", "stroke-opacity": ".55", "stroke-width": ".05", "stroke-dasharray": ".12 .1" }, bTrail);
       }
-      if (r.jump) { var dj = t - r.t1; if (dj > -.25 && dj < .3) scale[r.k] = 1 + .3 * Math.cos(dj / .3 * Math.PI / 2); }
+      if (r.jump) { var dj = t - (r.jumpAt == null ? r.t1 : r.jumpAt); if (dj > -.3 && dj < .3) scale[r.k] = 1 + .3 * Math.cos(dj / .3 * Math.PI / 2); }
     });
     var bp = p.ball[0].from, bh = 0, lines = [];
-    p.ball.forEach(function (s) {
+    var BALL_H = [2.6, .8, 2.7, 3.3, 0];
+    p.ball.forEach(function (s, si) {
       if (t < s.t0) return;
       var k = Math.min(1, (t - s.t0) / (s.t1 - s.t0));
+      a.ballY = BALL_H[si] + (BALL_H[si + 1] - BALL_H[si]) * k + Math.sin(k * Math.PI) * s.arc * 2.2;
       bp = [s.from[0] + (s.to[0] - s.from[0]) * k, s.from[1] + (s.to[1] - s.from[1]) * k];
       if (k < 1) bh = Math.sin(k * Math.PI) * s.arc;
       lines.push([s.from, bp]);
@@ -1905,15 +1949,33 @@ html, body { height: 100%; overflow: hidden; }
     if (t >= p.end) cap = a.combo.text;
     if ($("b-caption").textContent !== cap) $("b-caption").textContent = cap;
     bRender();
-    if (a.t < p.end || a.paused) bRaf = requestAnimationFrame(bFrame);
+    var fmt = function (v) { return v.toFixed(1).replace(".", ","); };
+    if (!a.seeking) $("b-seek").value = t;
+    $("b-time").textContent = fmt(t) + " / " + fmt(p.end) + " с";
+    setPauseIcon(a.paused || t >= p.end);
+    bRaf = requestAnimationFrame(bFrame);
   }
-  function bPlayCombo(c) {
+  var bLastCombo = null;
+  var PLAY_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>', PAUSE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>';
+  function setPauseIcon(showPlay) {
+    var b = $("b-pause"), want = showPlay ? "play" : "pause";
+    if (b.getAttribute("data-icon") === want) return;
+    b.setAttribute("data-icon", want);
+    b.innerHTML = showPlay ? PLAY_SVG : PAUSE_SVG;
+    b.setAttribute("aria-label", showPlay ? "Воспроизвести" : "Пауза");
+    b.title = b.getAttribute("aria-label");
+  }
+  function bPlayCombo(c, paused) {
     bStopRaf();
-    bAnim = { combo: c, plan: comboPlan(c), t: 0, last: performance.now(), paused: false, pos: {}, scale: {} };
-    $("b-play").hidden = false; $("b-caption").hidden = false; $("b-pause").textContent = "Пауза";
-    setPressed($("b-combos"), c.id);
+    if (b3d) b3d.trail.length = 0;
+    bLastCombo = c;
+    bAnim = { combo: c, plan: comboPlan(c), t: 0, last: performance.now(), paused: !!paused, pos: {}, scale: {} };
+    $("b-play").hidden = false; $("b-caption").hidden = false;
+    $("b-combos").value = c.id;
+    $("b-seek").max = bAnim.plan.end;
     closePop();
-        bRaf = requestAnimationFrame(bFrame);
+    syncRails();
+    bRaf = requestAnimationFrame(bFrame);
   }
   function bStopRaf() { if (bRaf) { cancelAnimationFrame(bRaf); bRaf = null; } }
   function bStop() {
@@ -1921,29 +1983,230 @@ html, body { height: 100%; overflow: hidden; }
     bAnim = null;
     while (bTrail.firstChild) bTrail.removeChild(bTrail.firstChild);
     $("b-play").hidden = true; $("b-caption").hidden = true;
-    setPressed($("b-combos"), "");
+    if (!$("b3d-wrap").hidden) toggle3d();
     bRender();
+    syncRails();
   }
   COMBOS.forEach(function (c) {
-    var b = document.createElement("button");
-    b.type = "button"; b.setAttribute("data-v", c.id);
-    b.innerHTML = c.name + "<small>" + c.sub + "</small>";
-    b.addEventListener("click", function () { bPlayCombo(c); });
-    $("b-combos").appendChild(b);
+    var o = document.createElement("option");
+    o.value = c.id; o.textContent = c.name;
+    $("b-combos").appendChild(o);
+  });
+  $("b-combos").addEventListener("change", function (e) {
+    var c = COMBOS.filter(function (x) { return x.id === e.target.value; })[0];
+    if (c) bPlayCombo(c);
   });
   $("b-pause").addEventListener("click", function () {
     if (!bAnim) return;
     if (bAnim.t >= bAnim.plan.end) { bPlayCombo(bAnim.combo); return; }
     bAnim.paused = !bAnim.paused;
-    $("b-pause").textContent = bAnim.paused ? "Продолжить" : "Пауза";
-    if (!bRaf) bRaf = requestAnimationFrame(bFrame);
   });
   $("b-replay").addEventListener("click", function () { if (bAnim) bPlayCombo(bAnim.combo); });
-  $("b-speed").addEventListener("click", function () {
-    bSpeed = bSpeed === 1 ? .5 : 1;
-    $("b-speed").textContent = bSpeed === 1 ? "Медленнее" : "Обычная скорость";
+  $("b-speed").addEventListener("change", function (e) { bSpeed = +e.target.value; });
+  $("b-seek").addEventListener("input", function (e) {
+    if (!bAnim) return;
+    if (+e.target.value < bAnim.t && b3d) b3d.trail.length = 0;
+    bAnim.t = +e.target.value;
   });
+  $("b-seek").addEventListener("pointerdown", function () { if (bAnim) bAnim.seeking = true; });
+  $("b-seek").addEventListener("pointerup", function () { if (bAnim) bAnim.seeking = false; });
   $("b-stop").addEventListener("click", bStop);
+
+  // ———— Просмотр в 3D: своя перспектива на обычном холсте, без внешних библиотек и без интернета ————
+  var b3d = null;
+  var P3D = { 1: "#ffc53d", 2: "#ff8d7d", 3: "#b9ea7f", 4: "#66e3cf", 5: "#cfa8ff", 6: "#ffabd4" };
+  $("b-3d").addEventListener("click", toggle3d);
+  function toggle3d() {
+    var w = $("b3d-wrap");
+    w.hidden = !w.hidden;
+    if (!w.hidden) init3d();
+    syncRails();
+  }
+  function init3d() {
+    if (!b3d) {
+      var wrap = $("b3d-wrap"), cv = document.createElement("canvas");
+      wrap.insertBefore(cv, wrap.firstChild);
+      var orbit = { az: 0, pol: 1.08, dist: 23, tAz: 0, tPol: 1.08, tDist: 23 };
+      var CAMS = { back: [0, 1.08, 23], side: [Math.PI / 2, 1.15, 25], top: [0, .06, 27], opp: [Math.PI, 1.08, 23] };
+      Array.prototype.forEach.call($("b3d-views").querySelectorAll("button"), function (b) {
+        b.addEventListener("click", function () { var c = CAMS[b.getAttribute("data-cam")]; orbit.tAz = c[0]; orbit.tPol = c[1]; orbit.tDist = c[2]; });
+      });
+      var ptrs = {}, pinch = 0;
+      cv.addEventListener("pointerdown", function (e) { closePop(); cv.setPointerCapture(e.pointerId); ptrs[e.pointerId] = [e.clientX, e.clientY]; pinch = 0; e.preventDefault(); });
+      cv.addEventListener("pointermove", function (e) {
+        var pr = ptrs[e.pointerId]; if (!pr) return;
+        var ids = Object.keys(ptrs);
+        if (ids.length === 1) {
+          orbit.tAz -= (e.clientX - pr[0]) * .007;
+          orbit.tPol = Math.max(.06, Math.min(1.45, orbit.tPol - (e.clientY - pr[1]) * .005));
+        }
+        ptrs[e.pointerId] = [e.clientX, e.clientY];
+        if (ids.length === 2) {
+          var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+          if (pinch) orbit.tDist = Math.max(14, Math.min(45, orbit.tDist * pinch / d));
+          pinch = d;
+        }
+      });
+      function up(e) { delete ptrs[e.pointerId]; pinch = 0; }
+      cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+      cv.addEventListener("wheel", function (e) { e.preventDefault(); orbit.tDist = Math.max(14, Math.min(45, orbit.tDist * (e.deltaY > 0 ? 1.08 : .92))); }, { passive: false });
+      b3d = { cv: cv, ctx: cv.getContext("2d"), orbit: orbit, trail: [], running: false };
+    }
+    if (!b3d.running) { b3d.running = true; requestAnimationFrame(step3d); }
+  }
+  // Позы рук: локоть и кисть относительно плеча (в сторону, вверх, вперёд к сетке).
+  var ARM = {
+    ready: [.12, -.3, .1, .06, -.55, .3],
+    pass: [.02, -.3, .3, -.22, -.45, .62],
+    set: [.15, .18, .18, -.12, .52, .22],
+    block: [.05, .38, .05, -.05, .78, .08],
+    back: [.12, -.25, -.2, .06, -.35, -.5],
+    aim: [.08, .35, .2, .02, .72, .25],
+    cock: [.2, .15, -.2, .05, .45, -.35],
+    contact: [.05, .42, .2, .02, .74, .45],
+    follow: [.1, .1, .35, -.05, -.2, .5],
+    chest: [.14, -.1, .22, -.08, -.05, .3]
+  };
+  function mixArm(a, b, k) { return a.map(function (v, i) { return v + (b[i] - v) * k; }); }
+  function armPose(k, isHit) {
+    if (!bAnim || !bAnim.plan.acts) return ARM.ready;
+    var t = Math.min(bAnim.t, bAnim.plan.end), acts = bAnim.plan.acts, out = ARM.ready;
+    for (var i = 0; i < acts.length; i++) {
+      var ac = acts[i];
+      if (ac.k !== k || t < ac.t0 || t > ac.t1) continue;
+      var w = Math.min(1, Math.min(t - ac.t0, ac.t1 - t) / .1), target;
+      if (ac.pose === "spike" || ac.pose === "fake") {
+        var dt = t - ac.peak;
+        if (!isHit) target = dt < .08 ? ARM.aim : mixArm(ARM.aim, ARM.chest, Math.min(1, (dt - .08) / .15));
+        else if (ac.pose === "fake" || dt < -.08) target = ARM.cock;
+        else if (dt < .03) target = mixArm(ARM.cock, ARM.contact, (dt + .08) / .11);
+        else target = mixArm(ARM.contact, ARM.follow, Math.min(1, (dt - .03) / .15));
+      } else target = ARM[ac.pose];
+      out = mixArm(ARM.ready, target, w);
+    }
+    return out;
+  }
+  function step3d() {
+    var wrap = $("b3d-wrap");
+    if (wrap.hidden) { b3d.running = false; return; }
+    var cv = b3d.cv, c = b3d.ctx, o = b3d.orbit, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = wrap.clientWidth, H = wrap.clientHeight;
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    o.az += (o.tAz - o.az) * .12; o.pol += (o.tPol - o.pol) * .12; o.dist += (o.tDist - o.dist) * .12;
+    // Камера смотрит на центр площадки с орбиты
+    var cx = o.dist * Math.sin(o.pol) * Math.sin(o.az), cy = 1 + o.dist * Math.cos(o.pol), cz = o.dist * Math.sin(o.pol) * Math.cos(o.az);
+    var fx = -cx, fy = 1 - cy, fz = -cz, fl = Math.hypot(fx, fy, fz); fx /= fl; fy /= fl; fz /= fl;
+    var rx = -fz, rz = fx, rl = Math.hypot(rx, rz) || 1; rx /= rl; rz /= rl;
+    if (Math.hypot(fx, fz) < .001) { rx = Math.cos(o.az); rz = -Math.sin(o.az); }
+    var ux = -rz * fy, uy = rz * fx - rx * fz, uz = rx * fy;
+    var focal = W < H ? W * 1.5 : Math.min(W, H * 1.4) * .95;
+    function P(x, y, z) {
+      var dx = x - cx, dy = y - cy, dz = z - cz, d = Math.max(.5, dx * fx + dy * fy + dz * fz), k = focal / d;
+      return [W / 2 + (dx * rx + dz * rz) * k, H / 2 - (dx * ux + dy * uy + dz * uz) * k, k, d];
+    }
+    function poly(pts, fill, stroke, lw) {
+      c.beginPath();
+      pts.forEach(function (q, i) { var p = P(q[0], q[1], q[2]); if (i) c.lineTo(p[0], p[1]); else c.moveTo(p[0], p[1]); });
+      c.closePath();
+      if (fill) { c.fillStyle = fill; c.fill(); }
+      if (stroke) { c.strokeStyle = stroke; c.lineWidth = lw || 1; c.stroke(); }
+    }
+    function line3(a, b, color, w3) {
+      var p = P(a[0], a[1], a[2]), q = P(b[0], b[1], b[2]);
+      c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(q[0], q[1]); c.strokeStyle = color; c.lineWidth = Math.max(1, w3 * (p[2] + q[2]) / 2); c.lineCap = "round"; c.stroke();
+    }
+    c.fillStyle = "#0d3a5c"; c.fillRect(0, 0, W, H);
+    poly([[-12, 0, -15], [12, 0, -15], [12, 0, 15], [-12, 0, 15]], "#0f4468");
+    poly([[-4.5, 0, -9], [4.5, 0, -9], [4.5, 0, 9], [-4.5, 0, 9]], "#17557f");
+    [[-4.5, -9, -4.5, 9], [4.5, -9, 4.5, 9], [-4.5, -9, 4.5, -9], [-4.5, 9, 4.5, 9], [-4.5, -3, 4.5, -3], [-4.5, 3, 4.5, 3], [-4.5, 0, 4.5, 0]].forEach(function (l) {
+      line3([l[0], 0, l[1]], [l[2], 0, l[3]], "#f4f8fb", .06);
+    });
+    var a = bAnim, pos = a ? a.pos : bState.pos, sc = a ? a.scale : {}, items = [];
+    function zOf(k) { return (pos[k] || bState.pos[k])[1]; }
+    ALL.forEach(function (p) {
+      ["u", "o"].forEach(function (t) {
+        var k = t + p;
+        if (t === "o" && !bState.opp) return;
+        var q = pos[k] || bState.pos[k], jump = sc[k] ? (sc[k] - 1) / .3 * .9 : 0;
+        items.push({ type: "man", k: k, n: p, t: t, x: q[0] - 4.5, z: q[1], jump: jump });
+      });
+    });
+    var bq = a && a.pos.ball ? a.pos.ball : bOrigin(), by = a ? (a.ballY == null ? 2.6 : a.ballY) : 1;
+    var showBall = !!a || !bAttacker(), bx3 = bq[0] - 4.5, bz3 = bq[1], by3 = Math.max(.17, by);
+    if (showBall) items.push({ type: "ball", x: bx3, z: bz3 });
+    // Тени на полу
+    items.forEach(function (it) {
+      var p = P(it.x, 0, it.z), r = (it.type === "man" ? .32 : .18) * p[2];
+      c.beginPath(); c.ellipse(p[0], p[1], r, r * Math.max(.25, Math.abs(fy)), 0, 0, Math.PI * 2);
+      c.fillStyle = "rgba(6,20,31,.45)"; c.fill();
+    });
+    // След мяча
+    if (a && showBall) {
+      var last = b3d.trail[b3d.trail.length - 1];
+      if (!last || Math.hypot(last[0] - bx3, last[1] - by3, last[2] - bz3) > .08) b3d.trail.push([bx3, by3, bz3]);
+    } else if (!a) b3d.trail.length = 0;
+    function drawTrail() {
+      if (b3d.trail.length < 2) return;
+      c.beginPath();
+      b3d.trail.forEach(function (q, i) { var p = P(q[0], q[1], q[2]); if (i) c.lineTo(p[0], p[1]); else c.moveTo(p[0], p[1]); });
+      c.strokeStyle = "#ff8a2a"; c.lineWidth = 2; c.lineJoin = "round"; c.stroke();
+    }
+    function drawNet() {
+      [-5, 5].forEach(function (x) { line3([x, 0, 0], [x, 2.5, 0], "#dfe7ec", .08); });
+      poly([[-5, 1.5, 0], [5, 1.5, 0], [5, 2.43, 0], [-5, 2.43, 0]], "rgba(255,255,255,.2)");
+      c.save();
+      for (var x = -4.75; x < 5; x += .5) line3([x, 1.5, 0], [x, 2.43, 0], "rgba(255,255,255,.28)", .012);
+      for (var y = 1.65; y < 2.4; y += .25) line3([-5, y, 0], [5, y, 0], "rgba(255,255,255,.28)", .012);
+      c.restore();
+      line3([-5, 2.43, 0], [5, 2.43, 0], "#ffffff", .07);
+      line3([-5, 1.5, 0], [5, 1.5, 0], "#ffffff", .03);
+    }
+    function label(text, x, y, size, fill) {
+      c.font = "700 " + size + "px " + getComputedStyle(document.body).fontFamily;
+      c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round";
+      c.lineWidth = Math.max(2, size / 4); c.strokeStyle = "#0c2233"; c.strokeText(text, x, y);
+      c.fillStyle = fill; c.fillText(text, x, y);
+    }
+    function drawItem(it) {
+      if (it.type === "ball") {
+        var p = P(bx3, by3, bz3), r = Math.max(4, .17 * p[2]);
+        var g = c.createRadialGradient(p[0] - r * .35, p[1] - r * .35, r * .1, p[0], p[1], r);
+        g.addColorStop(0, "#ffd0a0"); g.addColorStop(1, "#f27300");
+        c.beginPath(); c.arc(p[0], p[1], r, 0, Math.PI * 2); c.fillStyle = g; c.fill();
+        c.strokeStyle = "#ffffff"; c.lineWidth = 1; c.stroke();
+        return;
+      }
+      var color = it.t === "u" ? P3D[it.n] : "#24374a";
+      line3([it.x, it.jump + .3, it.z], [it.x, it.jump + 1.3, it.z], color, .42);
+      line3([it.x, it.jump + .06, it.z], [it.x, it.jump + .4, it.z], it.t === "u" ? "#23405a" : "#142433", .3);
+      // Руки двигаются по элементу, который игрок выполняет сейчас: приём, передача, замах, удар, блок.
+      var skin = it.t === "u" ? "#f0d2b6" : "#d8bda5", face = it.t === "u" ? -1 : 1, right = it.t === "u" ? 1 : -1;
+      [-1, 1].forEach(function (sd) {
+        var arm = armPose(it.k, sd === right), sx = it.x + sd * .25, sy = it.jump + 1.27;
+        var ex = sx + sd * arm[0], ey = sy + arm[1], ez = it.z + face * arm[2];
+        var hx = sx + sd * arm[3], hy = sy + arm[4], hz = it.z + face * arm[5];
+        line3([sx, sy, it.z], [ex, ey, ez], color, .13);
+        line3([ex, ey, ez], [hx, hy, hz], skin, .1);
+      });
+      var hd = P(it.x, it.jump + 1.62, it.z), hr = .17 * hd[2];
+      c.beginPath(); c.arc(hd[0], hd[1], hr, 0, Math.PI * 2); c.fillStyle = "#f0d2b6"; c.fill(); c.strokeStyle = "#0c2233"; c.lineWidth = 1; c.stroke();
+      var num = P(it.x, it.jump + .85, it.z), fs = Math.max(11, Math.min(30, .34 * num[2]));
+      label(String(it.n), num[0], num[1], fs, "#ffffff");
+      var top = P(it.x, it.jump + 2.02, it.z);
+      label(roleFor(it.n, 1), top[0], top[1], Math.max(9, Math.min(17, .2 * top[2])), "#ffffff");
+    }
+    // Порядок: всё по дальнюю от камеры сторону сетки, сетка, затем ближняя сторона
+    var camSide = cz >= 0 ? 1 : -1;
+    function depth(it) { return P(it.x, 1, it.z)[3]; }
+    var far = items.filter(function (it) { return it.z * camSide < 0; }).sort(function (m, n) { return depth(n) - depth(m); });
+    var nearS = items.filter(function (it) { return it.z * camSide >= 0; }).sort(function (m, n) { return depth(n) - depth(m); });
+    far.forEach(drawItem);
+    drawNet();
+    drawTrail();
+    nearS.forEach(drawItem);
+    requestAnimationFrame(step3d);
+  }
 
   $("b-undo").addEventListener("click", function () { var u = bUndo.pop(); if (u) { bState = JSON.parse(u); bSave(); bRender(); } });
   $("b-clear").addEventListener("click", function () { bRemember(); bState.strokes = []; bSave(); bRender(); });
@@ -2001,7 +2264,7 @@ html, body { height: 100%; overflow: hidden; }
     $("b-iconbar").appendChild(fa);
     var sep = document.createElement("span"); sep.className = "sep"; $("b-iconbar").appendChild(sep);
     $("b-iconbar").appendChild(railBtn("b", "color", "Цвет рисунка", function () { togglePop("color"); }));
-    $("b-iconbar").appendChild(railBtn("b", "combo", "Комбинации", function () { togglePop("combo"); }));
+    $("b-iconbar").appendChild(railBtn("b", "combo", "Комбинации", function () { if (bAnim) bStop(); else bPlayCombo(bLastCombo || COMBOS[0], true); }));
     $("b-iconbar").appendChild(railBtn("b", "opp", "Показать соперника", function () { $("b-opp").click(); }));
     $("b-iconbar").appendChild(railBtn("b", "clear", "Стереть рисунки", function () { $("b-clear").click(); }));
     $("b-iconbar").appendChild(railBtn("b", "reset", "Расставить заново", function () { $("b-reset").click(); }));
