@@ -92,25 +92,33 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
 #board-tools { display: grid; gap: 12px; }
 .page:not(.board) #board, .page:not(.board) #board-tools { display: none; }
 .page.board #court, .page.board .details, .page.board .court-note { display: none; }
-.page.board .controls > :not(#view-box):not(#board-tools) { display: none; }
 .page.board .court-bar { max-width: min(100%, 50vh); }
 .page.full #board { width: 100%; height: 100%; max-width: none; border-radius: 0; }
 .page.full.board .court-bar { max-width: none; }
 #b-caption { margin: 8px auto 0; max-width: min(100%, 50vh); padding: 8px 12px; border-radius: 6px; background: var(--floor); color: var(--on-court); font-size: 14px; line-height: 1.35; }
 .page.full #b-caption { position: absolute; left: 12px; right: 12px; bottom: 12px; margin: 0 auto; max-width: 560px; z-index: 1; }
 .page:not(.board) #b-caption { display: none; }
-#b-iconbar { display: none; }
-.page.full.board #b-iconbar { display: flex; flex-direction: column; gap: 4px; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); padding: 6px; background: var(--panel); border-radius: 10px; z-index: 1; max-height: calc(100% - 16px); overflow-y: auto; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
-#b-iconbar button { display: grid; place-items: center; flex: none; width: 40px; height: 40px; padding: 0; color: var(--fg); background: transparent; border: 0; border-radius: 8px; cursor: pointer; }
-#b-iconbar button:hover { background: var(--seg); }
-#b-iconbar button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
-#b-iconbar button[disabled] { opacity: .35; cursor: default; }
-#b-iconbar button[data-c][aria-pressed="true"] { background: var(--seg); box-shadow: inset 0 0 0 2px var(--accent); }
-#b-iconbar svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-#b-iconbar button { position: relative; }
-#b-iconbar .bi-n { position: absolute; right: 2px; bottom: 1px; font-size: 11px; font-weight: 700; line-height: 1; }
-#b-iconbar .sep { flex: none; height: 1px; background: var(--line); margin: 2px 4px; }
-#b-iconbar .swatch { width: 20px; height: 20px; outline: 1px solid var(--line); }
+.iconbar { display: flex; flex-direction: column; gap: 3px; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); padding: 5px; background: var(--panel); border-radius: 10px; z-index: 3; max-height: calc(100% - 16px); overflow-y: auto; scrollbar-width: none; box-shadow: 0 2px 10px rgba(0,0,0,.35); }
+.iconbar::-webkit-scrollbar { display: none; }
+.page.board #z-iconbar, .page:not(.board) #b-iconbar { display: none; }
+.iconbar button { display: grid; place-items: center; flex: none; position: relative; width: 38px; height: 38px; padding: 0; color: var(--fg); background: transparent; border: 0; border-radius: 8px; cursor: pointer; }
+.iconbar button:hover { background: var(--seg); }
+.iconbar button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+.iconbar button.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.iconbar button[disabled] { opacity: .35; cursor: default; }
+.iconbar button[hidden] { display: none; }
+.iconbar svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.iconbar .bi-n { position: absolute; right: 2px; bottom: 1px; font-size: 11px; font-weight: 700; line-height: 1; }
+.iconbar .sep { flex: none; height: 1px; background: var(--line); margin: 2px 4px; }
+.iconbar .swatch { width: 20px; height: 20px; outline: 1px solid var(--line); }
+@media (max-height: 560px) { .iconbar button { width: 32px; height: 32px; } .iconbar svg { width: 18px; height: 18px; } .iconbar { gap: 1px; padding: 3px; } }
+@media (max-width: 860px) and (orientation: portrait) {
+  .iconbar { flex-direction: row; left: 4px; right: 4px; top: auto; bottom: 6px; transform: none; gap: 2px; padding: 3px; max-height: none; overflow-x: auto; overflow-y: hidden; }
+  .iconbar button { width: 36px; height: 38px; }
+  .iconbar .sep { width: 1px; height: auto; margin: 4px 1px; }
+  .page.full.board #b-caption { bottom: 56px; }
+}
+.swatch { width: 20px; height: 20px; outline: 1px solid var(--line); }
 @media (max-height: 500px) { #b-iconbar button { width: 23px; height: 23px; } #b-iconbar svg { width: 18px; height: 18px; } .page.full.board #b-iconbar { gap: 1px; padding: 3px; } #b-iconbar .swatch { width: 16px; height: 16px; } }
 @media (max-width: 860px) and (orientation: portrait) {
   .page.full.board #b-iconbar { flex-direction: row; left: 50%; top: auto; bottom: 6px; transform: translateX(-50%); gap: 1px; padding: 3px; max-width: calc(100% - 8px); max-height: none; overflow-x: auto; }
@@ -128,20 +136,32 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
 .page.full .court-wrap { flex: 1; min-width: 0; height: 100%; position: relative; }
 .page.full svg#court { width: 100%; height: 100%; max-width: none; border-radius: 0; }
 .page.full .court-bar { position: absolute; top: 8px; right: 8px; margin: 0; max-width: none; }
-.page.full .controls { flex: none; width: min(340px, 85vw); height: 100%; overflow-y: auto; padding: 14px; background: var(--bg); }
-.page.full.no-side .controls { display: none; }
-@media (max-width: 860px) {
-  .page.full .controls { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: auto; z-index: 2; padding-top: 56px; }
-  .page.full .court-bar { z-index: 3; }
-}
-.tok:active { cursor: grabbing; }
-@media (max-width: 860px) {
-  .page { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "head" "controls" "court" "details"; }
-  svg#court, .court-note { max-width: 100%; }
+.page.full .court-bar { display: none; }
+html, body { height: 100%; overflow: hidden; }
+/* Панель настроек открывается как всплывающее меню рядом с иконками */
+.page.full .controls { position: absolute; left: 62px; top: 8px; width: min(320px, calc(100vw - 78px)); max-height: calc(100% - 16px); overflow-y: auto; padding: 12px; background: var(--panel); border-radius: 10px; z-index: 4; box-shadow: 0 2px 14px rgba(0,0,0,.4); display: block; }
+.page.full .controls:not([data-open]) { display: none; }
+.page.full .controls > *, .page.full #board-tools > * { display: none; }
+.page.full .controls[data-open="mode"] > #mode-box,
+.page.full .controls[data-open="sys"] > #sys-box,
+.page.full .controls[data-open="blk"] > #blk-box,
+.page.full .controls[data-open="partner"] > #partner-box,
+.page.full .controls[data-open="setter"] > #setter-box,
+.page.full .controls[data-open="our"] > #our-box { display: block; }
+.page.full .controls[data-open="edit"] > #edit-box { display: grid; }
+.page.full .controls[data-open="combo"] > #board-tools,
+.page.full .controls[data-open="color"] > #board-tools { display: grid; }
+.page.full .controls[data-open="combo"] #b-combo-box,
+.page.full .controls[data-open="color"] #b-color-box { display: block; }
+.page.full #edit-box { padding: 0; border: 0; background: none; }
+.page.full.show-details .details { display: grid; position: absolute; top: 0; right: 0; bottom: 0; width: min(380px, 100%); overflow-y: auto; align-content: start; padding: 44px 16px 16px; background: var(--bg); z-index: 4; box-shadow: -2px 0 14px rgba(0,0,0,.35); }
+.details-close { position: absolute; top: 8px; right: 8px; }
+@media (max-width: 860px) and (orientation: portrait) {
+  .page.full .controls { left: 8px; right: 8px; top: auto; bottom: 56px; width: auto; max-height: calc(100% - 72px); }
 }
 </style>
 
-<div class="page">
+<div class="page full">
   <header>
     <h1>Защита в волейболе</h1>
     <p>Зоны ответственности при атаке соперника, страховка при нашей атаке и планшет для своих схем.</p>
@@ -151,7 +171,8 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
     <svg id="court" viewBox="-0.9 -5.2 10.8 15.1" role="img" aria-label="Схема волейбольной площадки с зонами ответственности защитников"></svg>
     <svg id="board" viewBox="-0.9 -9.9 10.8 19.8" role="img" aria-label="Тактический планшет: площадка с игроками и рисунками"></svg>
     <div id="b-caption" aria-live="polite" hidden></div>
-    <div id="b-iconbar" role="toolbar" aria-label="Инструменты планшета"></div>
+    <div id="z-iconbar" class="iconbar" role="toolbar" aria-label="Настройки схемы"></div>
+    <div id="b-iconbar" class="iconbar" role="toolbar" aria-label="Инструменты планшета"></div>
     <div class="court-bar">
       <button class="reset" id="side-toggle" type="button" hidden>Настройки</button>
       <button class="reset" id="fs" type="button">На весь экран</button>
@@ -164,7 +185,7 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
       <div class="seg" id="view" role="group" aria-label="Раздел"></div>
     </div>
     <div id="board-tools">
-      <div>
+      <div id="b-combo-box">
         <span class="field-label" id="l-combo">Комбинации</span>
         <div class="seg two" id="b-combos" role="group" aria-labelledby="l-combo"></div>
         <div class="row" id="b-play" style="margin-top:8px" hidden>
@@ -175,7 +196,7 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
         </div>
       </div>
       <div><span class="field-label" id="l-bt">Инструмент</span><div class="seg two" id="b-tool" role="group" aria-labelledby="l-bt"></div></div>
-      <div><span class="field-label">Цвет</span><div class="palette" id="b-color"></div></div>
+      <div id="b-color-box"><span class="field-label">Цвет</span><div class="palette" id="b-color"></div></div>
       <div class="row">
         <button class="reset" id="b-undo" type="button" style="margin-left:0">Отменить</button>
         <button class="reset" id="b-clear" type="button" style="margin-left:0">Стереть рисунки</button>
@@ -188,7 +209,7 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
       <label class="check"><input type="checkbox" id="b-opp" checked> Показать соперника</label>
       <p class="note">Сплошная стрелка удобна для перемещения игрока, пунктирная для передачи или удара. Схема сохраняется автоматически.</p>
     </div>
-    <div>
+    <div id="mode-box">
       <span class="field-label" id="l-mode">Ситуация</span>
       <div class="seg two" id="mode" role="group" aria-labelledby="l-mode"></div>
     </div>
@@ -220,6 +241,7 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
     </div>
     <div class="row"><button class="reset" id="edit-toggle" type="button" style="margin-left:0">Изменить зоны</button></div>
     <div id="edit-box" hidden>
+      <button class="reset" id="edit-done" type="button" style="margin-left:0;justify-self:start">Готово</button>
       <p class="note">Выберите игрока. Кистью закрашивайте площадку, а инструментом «Обвести» нарисуйте контур любой формы: всё внутри него отойдёт игроку. Изменения относятся только к этой схеме.</p>
       <div><span class="field-label">Чью зону рисуем</span><div class="palette" id="palette"></div></div>
       <div><span class="field-label" id="l-tool">Инструмент</span><div class="seg" id="tool" role="group" aria-labelledby="l-tool"></div></div>
@@ -231,6 +253,7 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
   </section>
 
   <section class="details" aria-live="polite">
+    <button class="reset details-close" id="details-close" type="button">Закрыть</button>
     <div>
       <h2 id="title"></h2>
       <p class="sum" id="sum"></p>
@@ -1249,6 +1272,7 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
     if (pg) note = "Зоны на этой схеме изменены вручную. Они не меняются, когда вы перетаскиваете игроков, но таблица ударов считается уже по ним.";
     $("note").textContent = note;
     renderEdit(field);
+    syncRails();
 
     $("reset").disabled = !state.moved;
     Object.keys(oppButtons).forEach(function (z) {
@@ -1350,30 +1374,95 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
   });
   // Весь экран: площадка занимает всё окно, даже если браузер не даёт настоящий полноэкранный режим.
   var pageEl = document.querySelector(".page");
-  function setFull(on) {
-    pageEl.classList.toggle("full", on);
-    pageEl.classList.toggle("no-side", on && (window.innerWidth <= 860 || pageEl.classList.contains("board")));
-    document.documentElement.style.overflow = on ? "hidden" : "";
-    $("fs").textContent = on ? "Выйти" : "На весь экран";
-    $("side-toggle").hidden = !on;
-    if (typeof bLayout === "function") setTimeout(bLayout, 60);
-  }
   function exitNative() {
     if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
   }
-  $("fs").addEventListener("click", function () {
-    if (pageEl.classList.contains("full")) { setFull(false); exitNative(); return; }
-    setFull(true);
+  function toggleNative() {
+    if (document.fullscreenElement) { exitNative(); return; }
     if (pageEl.requestFullscreen) { try { var fp = pageEl.requestFullscreen(); if (fp && fp.catch) fp.catch(function () {}); } catch (e) {} }
-  });
-  $("side-toggle").addEventListener("click", function () { pageEl.classList.toggle("no-side"); });
-  var wasNative = false;
-  document.addEventListener("fullscreenchange", function () {
-    if (wasNative && !document.fullscreenElement) setFull(false);
-    wasNative = !!document.fullscreenElement;
-    setTimeout(bLayout, 60);
-  });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && pageEl.classList.contains("full")) { setFull(false); exitNative(); } });
+  }
+  document.addEventListener("fullscreenchange", function () { setTimeout(bLayout, 60); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closePop(); pageEl.classList.remove("show-details"); syncRails(); } });
+
+  // ———— Всплывающие меню и панели иконок ————
+  var ctrl = document.querySelector(".controls"), railBtns = {};
+  function openPop(name) { ctrl.setAttribute("data-open", name); pageEl.classList.remove("show-details"); syncRails(); }
+  function closePop() { ctrl.removeAttribute("data-open"); syncRails(); }
+  function togglePop(name) { if (ctrl.getAttribute("data-open") === name) closePop(); else openPop(name); }
+  var ICONS = {
+    view: '<path d="M4 4h16v16H4zM4 12h16M12 4v16"/>', board: '<path d="M4 5h16v12H4zM8 21l4-4 4 4M8 13l3-3 2 2 3-4"/>',
+    mode: '<path d="M5 21V4M5 5h13l-3 4 3 4H5"/>', sys: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+    blk: '<path d="M3 15h18M7 15V7M12 15V5M17 15V7"/>', partner: '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 20c0-3 2-5 5-5s5 2 5 5M13 15.5c1-.4 2-.5 3-.5 3 0 5 2 5 5"/>',
+    setter: '<circle cx="12" cy="6" r="3"/><path d="M12 9v6M12 15l-4 6M12 15l4 6M6 11l6 1 6-1"/>', our: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>',
+    shots: '<path d="M12 3v18M12 3L4 19M12 3l8 16M9 18l3 3 3-3"/>', shadow: '<path d="M9 4h6l5 16H4zM8 12l5-5M6.5 18l9-9M11 19l6-6"/>',
+    reset: '<path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/>', edit: '<path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>', full: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+    combo: '<path d="M6 4l13 8-13 8z"/>', color: '<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18c2 0 2-2 1-3s0-3 2-3h4c1 0 2-1 2-3"/><circle cx="8" cy="10" r=".6"/><circle cx="12" cy="7" r=".6"/>',
+    opp: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 6-5s6 2 6 5M17 5l4 4M21 5l-4 4"/>', clear: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
+  };
+  function railBtn(bar, key, label, onClick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.id = "r-" + bar + "-" + key; b.title = label; b.setAttribute("aria-label", label);
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[key] + '</svg><span class="bi-n"></span>';
+    b.addEventListener("click", onClick);
+    railBtns[bar + "-" + key] = b;
+    return b;
+  }
+  function closePopOnCourt(e) {
+    if (ctrl.getAttribute("data-open") && ctrl.getAttribute("data-open") !== "edit") closePop();
+  }
+  svg.addEventListener("pointerdown", closePopOnCourt, true);
+  $("board").addEventListener("pointerdown", closePopOnCourt, true);
+  function switchView() { $("view").querySelector('[data-v="' + (pageEl.classList.contains("board") ? "zones" : "board") + '"]').click(); closePop(); pageEl.classList.remove("show-details"); syncRails(); }
+  var zBar = $("z-iconbar");
+  [["view", "Перейти на планшет", switchView],
+   ["mode", "Ситуация", function () { togglePop("mode"); }],
+   ["sys", "Система защиты", function () { togglePop("sys"); }],
+   ["blk", "Игроков в блоке", function () { togglePop("blk"); }],
+   ["partner", "Кто помогает центральному", function () { togglePop("partner"); }],
+   ["setter", "Откуда выходит связующий", function () { togglePop("setter"); }],
+   ["our", "Откуда бьёт наш нападающий", function () { togglePop("our"); }],
+   ["shots", "Направления ударов", function () { $("t-shots").click(); syncRails(); }],
+   ["shadow", "Тень блока", function () { $("t-shadow").click(); syncRails(); }],
+   ["edit", "Изменить зоны", function () {
+     if (!state.edit) { $("edit-toggle").click(); openPop("edit"); }
+     else togglePop("edit");
+   }],
+   ["reset", "Сбросить расстановку", function () { $("reset").click(); }],
+   ["info", "Разбор схемы", function () { closePop(); pageEl.classList.toggle("show-details"); syncRails(); }],
+   ["full", "Настоящий полный экран", toggleNative]].forEach(function (o) { zBar.appendChild(railBtn("z", o[0], o[1], o[2])); });
+  $("edit-done").addEventListener("click", function () { if (state.edit) $("edit-toggle").click(); closePop(); });
+  $("details-close").addEventListener("click", function () { pageEl.classList.remove("show-details"); syncRails(); });
+  $("palette").addEventListener("click", function () { if (window.innerWidth <= 860) closePop(); });
+  (function () { var n = document.querySelector(".court-note"), p = document.createElement("p"); p.className = "note"; p.textContent = n.textContent; document.querySelector(".details").appendChild(p); })();
+  function syncRails() {
+    var open = ctrl.getAttribute("data-open");
+    function pop(key, name, box) {
+      var b = railBtns[key];
+      if (!b) return;
+      if (box) b.hidden = $(box).hidden;
+      b.setAttribute("aria-pressed", String(open === name));
+    }
+    pop("z-mode", "mode"); pop("z-sys", "sys", "sys-box"); pop("z-blk", "blk", "blk-box");
+    pop("z-partner", "partner", "partner-box"); pop("z-setter", "setter", "setter-box"); pop("z-our", "our", "our-box");
+    if (!railBtns["z-view"]) return;
+    railBtns["z-blk"].querySelector(".bi-n").textContent = state.blockers;
+    railBtns["z-shots"].setAttribute("aria-pressed", String($("t-shots").checked));
+    railBtns["z-shadow"].setAttribute("aria-pressed", String($("t-shadow").checked));
+    railBtns["z-shadow"].hidden = $("shadow-box").hidden;
+    railBtns["z-reset"].disabled = $("reset").disabled;
+    railBtns["z-edit"].setAttribute("aria-pressed", String(open === "edit"));
+    railBtns["z-edit"].classList.toggle("on", !!state.edit);
+    railBtns["z-info"].setAttribute("aria-pressed", String(pageEl.classList.contains("show-details")));
+    if (railBtns["b-combo"]) {
+      railBtns["b-combo"].setAttribute("aria-pressed", String(open === "combo"));
+      railBtns["b-combo"].classList.toggle("on", !!bAnim);
+      railBtns["b-color"].setAttribute("aria-pressed", String(open === "color"));
+      railBtns["b-color"].style.color = bColor === "#ffffff" ? "" : bColor;
+      railBtns["b-opp"].setAttribute("aria-pressed", String(!!bState.opp));
+      railBtns["b-clear"].disabled = !bState.strokes.length;
+    }
+  }
   $("edit-toggle").addEventListener("click", function () { state.edit = !state.edit; state.selected = null; draw(); renderPanel(); });
   $("zones-reset").addEventListener("click", function () { remember(); var k = zoneKey(); delete customs[k]; persist(k); draw(); renderPanel(); });
 
@@ -1545,6 +1634,7 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
     setPressed($("b-tool"), bTool);
     setPressed($("b-iconbar"), bTool);
     Array.prototype.forEach.call($("b-iconbar").querySelectorAll("button[data-c]"), function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-c") === bColor)); });
+    syncRails();
     var iu = $("b-iconbar").querySelector("#bi-undo"); if (iu) iu.disabled = !bUndo.length;
     var ib = $("b-iconbar").querySelector("#bi-block"), is = $("b-iconbar").querySelector("#bi-shadow");
     if (ib) {
@@ -1685,15 +1775,15 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
     { id: "quick", name: "Быстрая", sub: "первый темп в зоне 3", setDur: .4, arc: .15, set: [4.9, .55], hit: [2.5, -5.5],
       runs: [["u3", [[4.9, .75]], .4, .9, true], ["u4", [[.6, .9]], .6, 1, false], ["u2", [[8.4, .9]], .6, 1, false]],
       text: "Центральный выпрыгивает ещё до передачи. Связующий даёт короткий низкий мяч прямо ему в руку." },
-    { id: "zone", name: "Зона", sub: "ЦБ бьёт между 4 и 3", setDur: .6, arc: .2, set: [3, .55], hit: [7, -6],
-      runs: [["u3", [[3, .75]], .6, 1, true], ["u4", [[.6, .9]], .7, 1, false], ["u2", [[8.4, .9]], .7, 1, false]],
-      text: "Центральный уходит от связующего и бьёт в зазоре между зонами 4 и 3. Передача быстрая и низкая, блок не успевает сомкнуться." },
+    { id: "zone", name: "Зона", sub: "ЦБ бьёт широко, ближе к зоне 4", setDur: .6, arc: .2, set: [2.2, .55], hit: [7, -6],
+      runs: [["u3", [[.8, 2.6], [2.2, .75]], .6, 1.6, true], ["u4", [[.6, .9]], .7, 1, false], ["u2", [[8.4, .9]], .7, 1, false]],
+      text: "Центральный смещается влево, уходит от связующего и бьёт широко, ближе к зоне 4. Передача быстрая и низкая, блок не успевает сомкнуться." },
     { id: "cross", name: "Крест", sub: "ЦБ в зону, доигровщик в зону 3", setDur: .75, arc: .35, set: [4.4, .6], hit: [7.2, -6],
-      runs: [["u3", [[3, .75]], .35, .9, true], ["u4", [[4.4, .75]], .75, 1.2, true]],
-      text: "Центральный прыгает в зону между 4 и 3 и уводит блок. Доигровщик забегает у него за спиной и бьёт в зоне 3." },
+      runs: [["u3", [[.8, 2.6], [2.2, .75]], .35, 1.5, true], ["u4", [[4.4, .75]], .75, 1.2, true]],
+      text: "Центральный прыгает широко, ближе к зоне 4, и уводит блок. Доигровщик забегает у него за спиной и бьёт в зоне 3." },
     { id: "tandem", name: "Тандем", sub: "ЦБ в зону, диагональный у связки", setDur: .65, arc: .3, set: [4.8, .6], hit: [1.8, -6.5],
-      runs: [["u3", [[3, .75]], .3, .9, true], ["u2", [[4.8, .75]], .65, 1.1, true]],
-      text: "Центральный прыгает в зону между 4 и 3 и забирает блок. Диагональный бьёт на метр перед связующим." },
+      runs: [["u3", [[.8, 2.6], [2.2, .75]], .3, 1.5, true], ["u2", [[4.8, .75]], .65, 1.1, true]],
+      text: "Центральный прыгает широко, ближе к зоне 4, и забирает блок. Диагональный бьёт на метр перед связующим." },
     { id: "tandem-left", name: "Тандем слева", sub: "диагональный левее центрального", setDur: .85, arc: .35, set: [3.9, .6], hit: [7.3, -6.2],
       runs: [["u3", [[5, .7]], .3, .8, true], ["u2", [[5.2, 1.9], [3.9, .75]], .85, 1.3, true]],
       text: "Центральный прыгает на быструю перед связующим. Диагональный обегает его сзади и бьёт слева от него." },
@@ -1790,9 +1880,8 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
     bAnim = { combo: c, plan: comboPlan(c), t: 0, last: performance.now(), paused: false, pos: {}, scale: {} };
     $("b-play").hidden = false; $("b-caption").hidden = false; $("b-pause").textContent = "Пауза";
     setPressed($("b-combos"), c.id);
-    if (pageEl.classList.contains("full") && window.innerWidth <= 860) pageEl.classList.add("no-side");
-    if (!pageEl.classList.contains("full") && window.innerWidth <= 860) { try { bSvg.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {} }
-    bRaf = requestAnimationFrame(bFrame);
+    closePop();
+        bRaf = requestAnimationFrame(bFrame);
   }
   function bStopRaf() { if (bRaf) { cancelAnimationFrame(bRaf); bRaf = null; } }
   function bStop() {
@@ -1874,13 +1963,14 @@ svg#court { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparen
     si.addEventListener("click", function () { $("b-shots").click(); });
     $("b-iconbar").appendChild(si);
     var sep = document.createElement("span"); sep.className = "sep"; $("b-iconbar").appendChild(sep);
-    B_COLORS.forEach(function (c) {
-      var b = document.createElement("button");
-      b.type = "button"; b.setAttribute("data-c", c); b.setAttribute("aria-label", "Цвет рисунка " + c);
-      b.innerHTML = '<span class="swatch" style="background:' + c + '"></span>';
-      b.addEventListener("click", function () { bColor = c; if (bTool === "move" || bTool === "erase") bTool = "arrow"; bRender(); });
-      $("b-iconbar").appendChild(b);
-    });
+    $("b-iconbar").appendChild(railBtn("b", "color", "Цвет рисунка", function () { togglePop("color"); }));
+    $("b-iconbar").appendChild(railBtn("b", "combo", "Комбинации", function () { togglePop("combo"); }));
+    $("b-iconbar").appendChild(railBtn("b", "opp", "Показать соперника", function () { $("b-opp").click(); }));
+    $("b-iconbar").appendChild(railBtn("b", "clear", "Стереть рисунки", function () { $("b-clear").click(); }));
+    $("b-iconbar").appendChild(railBtn("b", "reset", "Расставить заново", function () { $("b-reset").click(); }));
+    $("b-iconbar").appendChild(railBtn("b", "full", "Настоящий полный экран", toggleNative));
+    var bv = railBtn("b", "board", "Перейти к зонам и схемам", switchView);
+    $("b-iconbar").insertBefore(bv, $("b-iconbar").firstChild);
   })();
   $("b-shots").addEventListener("change", function (e) { bRemember(); bState.shots = e.target.checked; bSave(); bRender(); });
   $("b-opp").addEventListener("change", function (e) { bRemember(); bState.opp = e.target.checked; bSave(); bRender(); });
