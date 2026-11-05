@@ -1525,6 +1525,7 @@ html, body { height: 100%; overflow: hidden; }
   var bDefs = el("defs", {}, bSvg), bPat = el("pattern", { id: "hatch-board", width: ".28", height: ".28", patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, bDefs);
   el("rect", { width: ".28", height: ".28", fill: "#0c2233", "fill-opacity": ".22" }, bPat);
   el("rect", { width: ".07", height: ".28", fill: "#0c2233", "fill-opacity": ".6" }, bPat);
+  var bFanOut = el("path", { fill: "#22d3c5", "fill-opacity": ".32", "fill-rule": "evenodd", style: "pointer-events:none" }, bRoot);
   var bFan = el("path", { fill: "#ff6a00", "fill-opacity": ".42", stroke: "#ff8a2a", "stroke-width": ".05", "stroke-linejoin": "round", style: "pointer-events:none" }, bRoot);
   var bShadow = el("polygon", { fill: "url(#hatch-board)", style: "pointer-events:none" }, bRoot);
   var bStrokes = el("g", {}, bRoot);
@@ -1542,7 +1543,7 @@ html, body { height: 100%; overflow: hidden; }
   // Направления ударов считаются как в разделе схем. Если мяч на нашей половине, площадка рассчитывается повёрнутой.
   // Радиус обстрела: участок половины соперника от удара в линию до резкой диагонали (примерно до линии 3 м).
   function bRenderFan() {
-    if (!bState.fan || bAnim) { bFan.setAttribute("d", ""); return; }
+    if (!bState.fan || bAnim) { bFan.setAttribute("d", ""); bFanOut.setAttribute("d", ""); return; }
     var o = bOrigin(), sg = o[1] < 0 ? 1 : -1, far = 9 * sg, near = 3 * sg, pts;
     if (o[0] < 3) pts = [o, [0, far], [COURT, far], [COURT, near]];
     else if (o[0] < 6) pts = [o, [0, near], [0, far], [COURT, far], [COURT, near]];
@@ -1558,9 +1559,15 @@ html, body { height: 100%; overflow: hidden; }
       };
       parts = [side(g.l, -1), side(g.r, 1)];
     }
-    bFan.setAttribute("d", parts.filter(function (q) { return q.length > 2; }).map(function (q) {
-      return "M" + q.map(function (t) { return t[0].toFixed(2) + " " + t[1].toFixed(2); }).join("L") + "Z";
-    }).join(""));
+    function pathOf(list) {
+      return list.filter(function (q) { return q.length > 2; }).map(function (q) {
+        return "M" + q.map(function (t) { return t[0].toFixed(2) + " " + t[1].toFixed(2); }).join("L") + "Z";
+      }).join("");
+    }
+    bFan.setAttribute("d", pathOf(parts));
+    // Остаток половины соперника, куда удар не достаёт, другим цветом.
+    var inHalf = parts.map(function (q) { return sg > 0 ? clip(q, 0, -1, 0) : clip(q, 0, 1, 0); });
+    bFanOut.setAttribute("d", pathOf([[[0, 0], [COURT, 0], [COURT, far], [0, far]]].concat(inHalf)));
   }
   function bRenderShots() {
     while (bShotsG.firstChild) bShotsG.removeChild(bShotsG.firstChild);
